@@ -16,7 +16,7 @@ This guide walks through manual test scenarios for the Mock Bank, Sentinel backe
 | **Rust toolchain** | [rustup.rs](https://rustup.rs): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` (then restart the terminal). |
 | **wstcp** (WebSocket proxy) | With Rust installed: `cargo install wstcp`. See [github.com/sile/wstcp](https://github.com/sile/wstcp). |
 | **TLSN browser extension** | [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [tlsn-extension releases](https://github.com/tlsnotary/tlsn-extension/releases). After install, open the extension → **Options** to set Proxy API and Notary API. |
-| **Mock Bank plugin (WASM)** | Clone [tlsn-plugin-boilerplate](https://github.com/tlsnotary/tlsn-plugin-boilerplate), configure requests for `https://localhost:3443` (login, balance, transactions), build to WASM, then copy `mock-bank-plugin.wasm` into `app/public/` or set `VITE_TLSN_PLUGIN_URL` in `app/.env`. See [app/public/mock-bank-plugin.readme.txt](../app/public/mock-bank-plugin.readme.txt). |
+| **Mock Bank plugin (WASM)** | Install **extism-js** (see [tlsn-plugin/README.md](../tlsn-plugin/README.md)), then from repo root run `bun run plugin:build`. This builds the `tlsn-plugin` workspace and copies `mock-bank-plugin.wasm` to `app/public/`. Or from `tlsn-plugin/` run `bun run build`; then copy `dist/mock-bank-plugin.tlsn.wasm` to `app/public/mock-bank-plugin.wasm` or set `VITE_TLSN_PLUGIN_URL` in `app/.env`. |
 
 ---
 

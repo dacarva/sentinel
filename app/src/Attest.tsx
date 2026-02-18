@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useConnection } from 'wagmi'
 import './Attest.css'
 
 const SENTINEL_API = import.meta.env.VITE_SENTINEL_API ?? 'http://localhost:3000'
@@ -22,12 +23,17 @@ interface AttestResult {
 }
 
 export function Attest() {
+  const { address: connectedAddress, isConnected } = useConnection()
   const [userAddress, setUserAddress] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [status, setStatus] = useState<AttestStatus>('idle')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<AttestResult | null>(null)
+
+  useEffect(() => {
+    if (connectedAddress) setUserAddress(connectedAddress)
+  }, [connectedAddress])
 
   async function handleProve() {
     const addr = userAddress.trim()
@@ -103,7 +109,9 @@ export function Attest() {
             placeholder="0x1234...abcd"
             value={userAddress}
             onChange={(e) => setUserAddress(e.target.value)}
+            readOnly={isConnected}
             disabled={status === 'proving' || status === 'submitting'}
+            title={isConnected ? 'Connected wallet — use header to disconnect' : undefined}
           />
         </label>
         <label>

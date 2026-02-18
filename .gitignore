@@ -33,3 +33,13 @@ Thumbs.db
 *.tgz
 .cache/
 mock-bank/certs/
+
+# Backend attestation storage (runtime data)
+backend/data/
+
+# Built TLSNotary plugin (generate with: bun run plugin:build)
+app/public/mock-bank-plugin.wasm
+
+# Binaryen (downloaded by extism-js install for WASM compile; not project source)
+binaryen/
+binaryen*
