@@ -1,3 +1,49 @@
+# zkCredit App — Minimal TLSNotary client
+
+Vite + React app that proves mock bank data in the browser with the TLSNotary extension and submits the proof to the Sentinel backend.
+
+## Quick start
+
+```bash
+bun run dev
+# or from repo root: bun run app:dev
+```
+
+Open the app (e.g. http://localhost:5173), enter your wallet address (0x + 40 hex) and optionally bank credentials, then click **Prove with TLSNotary**.
+
+## TLSNotary client setup
+
+To run the full flow (browser → TLSNotary → Mock Bank → backend) you need:
+
+1. **TLSN browser extension**  
+   Install from [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [releases](https://github.com/tlsnotary/tlsn-extension/releases). Open the extension and go to **Options**.
+
+2. **WebSocket proxy** (browsers can’t open TCP to localhost)  
+   - Install [wstcp](https://github.com/sile/wstcp): `cargo install wstcp`  
+   - Start Mock Bank: from repo root `bun run bank:start` (HTTPS on port 3443)  
+   - Run proxy: `wstcp --bind-addr 127.0.0.1:55688 localhost:3443`  
+   - In the extension Options, set **Proxy API** to `ws://localhost:55688`
+
+3. **Notary server**  
+   In extension Options, set **Notary API** to either:  
+   - Hosted: `https://notary.pse.dev/v0.1.0-alpha.12`  
+   - Local: `http://localhost:7047` (run from [tlsn](https://github.com/tlsnotary/tlsn): `cargo run --release --bin notary-server`)
+
+4. **Mock Bank plugin**  
+   The app calls `client.runPlugin(pluginUrl, params)`. You must build the Mock Bank plugin (from [tlsn-plugin-boilerplate](https://github.com/tlsnotary/tlsn-plugin-boilerplate)) and either put `mock-bank-plugin.wasm` in `app/public/` or set `VITE_TLSN_PLUGIN_URL` in `.env`. See `app/public/mock-bank-plugin.readme.txt`.
+
+5. **Sentinel backend** (for POST /attest)  
+   Set `VITE_SENTINEL_API` in `.env` (default `http://localhost:3000`). The backend must be running and CORS-enabled for the app origin.
+
+## Environment
+
+Copy `.env.example` to `.env` and adjust:
+
+- `VITE_SENTINEL_API` — Sentinel API base URL  
+- `VITE_TLSN_PLUGIN_URL` — URL of the Mock Bank plugin WASM (default `/mock-bank-plugin.wasm`)
+
+---
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

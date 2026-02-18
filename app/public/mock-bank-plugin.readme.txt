@@ -1,0 +1,13 @@
+Mock Bank TLSNotary plugin placeholder.
+
+To use the minimal client with real TLSNotary proof:
+
+1. Build the Mock Bank plugin from tlsn-plugin-boilerplate:
+   - https://github.com/tlsnotary/tlsn-plugin-boilerplate
+   - Configure requests for https://localhost:3443 (POST /auth/login, GET /account/balance, GET /account/transactions)
+   - Build to WASM (e.g. dist/index.wasm), rename to mock-bank-plugin.wasm
+   - Copy mock-bank-plugin.wasm into this folder (app/public/)
+
+2. Or set VITE_TLSN_PLUGIN_URL in .env to a URL that serves your built plugin WASM.
+
+Until the plugin is built, the "Prove with TLSNotary" button will fail at runPlugin (extension will prompt for a plugin; use the built WASM URL).

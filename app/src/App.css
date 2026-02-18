@@ -5,6 +5,27 @@
   text-align: center;
 }
 
+.app-header {
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+
+.app-tagline {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+@media (prefers-color-scheme: light) {
+  .app-tagline {
+    color: rgba(0, 0, 0, 0.6);
+  }
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;
