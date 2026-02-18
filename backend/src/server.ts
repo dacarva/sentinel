@@ -74,6 +74,13 @@ app.get("/attest/:id", async (req, res) => {
   res.json(att);
 });
 
+app.get("/verify/:id", (_req, res) => {
+  res.status(405).json({
+    error: "METHOD_NOT_ALLOWED",
+    message: "Use POST to verify an attestation",
+  });
+});
+
 app.post("/verify/:id", async (req, res) => {
   const id = req.params.id;
   const att = await loadAttestation(id);

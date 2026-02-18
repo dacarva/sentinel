@@ -11,7 +11,7 @@
     "app:lint": "bun run --filter app lint",
     "app:preview": "bun run --filter app preview",
     "sentinel:start": "bun run --filter backend start",
-    "plugin:build": "bun run --filter tlsn-plugin build && cp tlsn-plugin/dist/mock-bank-plugin.tlsn.wasm app/public/mock-bank-plugin.wasm",
+    "plugin:build": "bun run --filter mock-bank-plugin build && cp tlsn-plugin/dist/mock-bank-plugin.tlsn.wasm app/public/mock-bank-plugin.wasm",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },

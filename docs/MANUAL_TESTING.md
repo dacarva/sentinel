@@ -32,7 +32,7 @@ From repo root:
 bun run bank:start
 ```
 
-Expected: server listens on `https://localhost:3443`. Leave this terminal running.
+Expected: server listens on `https://localhost:3443`. Opening `https://localhost:3443` in a browser shows a **login page** (username/password form) so the extension has a bank “frontend” to open; API routes remain at `/auth/login`, `/account/balance`, etc. Leave this terminal running.
 
 ### 2.2 Generate TLS certificates (first time only)
 
@@ -41,6 +41,18 @@ If the server fails with missing certs:
 ```bash
 cd mock-bank/certs && bash generate.sh && cd ../..
 ```
+
+### 2.2a Trust the certificate in the browser (Attest flow)
+
+Mock Bank uses a **self-signed** certificate. When you open `https://localhost:3443` in Chrome (e.g. by clicking "Go to bank" in the TLSN extension), the browser shows **"Your connection is not private"** (`NET::ERR_CERT_AUTHORITY_INVALID`). Until you proceed, the extension will not treat the "Open Mock Bank" step as complete and the "Continue" (Enter credentials) button stays disabled.
+
+**Do this once per browser/session:**
+
+1. In the Chrome tab that opened to `https://localhost:3443`, click **Advanced**.
+2. Click **Proceed to localhost (unsafe)**.
+3. The Mock Bank **login page** should load (username/password form). You can sign in there for clarity, or go straight to the extension and click **Continue** (the plugin uses default or app-supplied credentials). The extension can then advance to "Enter credentials" and you can click **Continue**.
+
+Optional: to avoid the warning entirely, install [mkcert](https://github.com/FiloSottile/mkcert), run `mkcert -install`, then generate certs with mkcert for `localhost` and replace `mock-bank/certs/server.cert` and `server.key` (and point the server at them). The OpenSSL-generated certs work fine once you proceed past the warning.
 
 ### 2.3 Test: Valid login
 

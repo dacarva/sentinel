@@ -35,6 +35,9 @@ To run the full flow (browser → TLSNotary → Mock Bank → backend) you need:
 5. **Sentinel backend** (for POST /attest)  
    Set `VITE_SENTINEL_API` in `.env` (default `http://localhost:3000`). The backend must be running and CORS-enabled for the app origin.
 
+6. **Trust Mock Bank’s certificate (once per session)**  
+   When you click “Go to bank” in the extension, Chrome opens `https://localhost:3443` and shows “Your connection is not private” (self-signed cert). Click **Advanced** → **Proceed to localhost (unsafe)** so the tab loads; otherwise the extension won’t complete “Open Mock Bank” and “Continue” (Enter credentials) stays disabled.
+
 ## Environment
 
 Copy `.env.example` to `.env` and adjust:

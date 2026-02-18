@@ -31,7 +31,7 @@ router.post("/login", async (req: Request, res: Response) => {
         message: "Username and password required",
       });
     }
-    const dataDir = join(process.cwd(), "mock-bank", "data", "users.json");
+    const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
     const raw = await readFile(dataDir, "utf-8");
     const users = JSON.parse(raw) as UserRow[];
     const user = users.find((u) => u.username === username);

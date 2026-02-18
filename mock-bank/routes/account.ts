@@ -32,7 +32,7 @@ router.get("/balance", async (req: Request, res: Response) => {
   try {
     const username = (req as Request & { auth?: { sub: string } }).auth?.sub;
     if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: "No token" });
-    const dataDir = join(process.cwd(), "mock-bank", "data", "users.json");
+    const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
     const raw = await readFile(dataDir, "utf-8");
     const users = JSON.parse(raw) as UserRow[];
     const user = users.find((u) => u.username === username);
@@ -52,7 +52,7 @@ router.get("/transactions", async (req: Request, res: Response) => {
   try {
     const username = (req as Request & { auth?: { sub: string } }).auth?.sub;
     if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: "No token" });
-    const dataDir = join(process.cwd(), "mock-bank", "data", "users.json");
+    const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
     const raw = await readFile(dataDir, "utf-8");
     const users = JSON.parse(raw) as UserRow[];
     const user = users.find((u) => u.username === username);
