@@ -7,7 +7,16 @@ This guide walks through manual test scenarios for the Mock Bank, Sentinel backe
 ## 1. Prerequisites
 
 - **Bun** (or Node 18+) at repo root.
-- **Optional for full E2E:** Rust toolchain (for `wstcp`), TLSN browser extension, Mock Bank TLSNotary plugin (WASM). See [app/README.md](../app/README.md) and [app/public/mock-bank-plugin.readme.txt](../app/public/mock-bank-plugin.readme.txt).
+- **Optional for full E2E:** Rust toolchain (for `wstcp`), TLSN browser extension, Mock Bank TLSNotary plugin (WASM). How to install:
+
+### 1.1 Optional: Install E2E prerequisites
+
+| Component | How to install |
+|-----------|----------------|
+| **Rust toolchain** | [rustup.rs](https://rustup.rs): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` (then restart the terminal). |
+| **wstcp** (WebSocket proxy) | With Rust installed: `cargo install wstcp`. See [github.com/sile/wstcp](https://github.com/sile/wstcp). |
+| **TLSN browser extension** | [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [tlsn-extension releases](https://github.com/tlsnotary/tlsn-extension/releases). After install, open the extension → **Options** to set Proxy API and Notary API. |
+| **Mock Bank plugin (WASM)** | Clone [tlsn-plugin-boilerplate](https://github.com/tlsnotary/tlsn-plugin-boilerplate), configure requests for `https://localhost:3443` (login, balance, transactions), build to WASM, then copy `mock-bank-plugin.wasm` into `app/public/` or set `VITE_TLSN_PLUGIN_URL` in `app/.env`. See [app/public/mock-bank-plugin.readme.txt](../app/public/mock-bank-plugin.readme.txt). |
 
 ---
 
