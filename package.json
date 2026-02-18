@@ -3,13 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["mock-bank","app"],
+  "workspaces": ["mock-bank","app","backend"],
   "scripts": {
     "bank:start": "bun run --filter mock-bank start",
     "app:dev": "bun run --filter app dev",
     "app:build": "bun run --filter app build",
     "app:lint": "bun run --filter app lint",
     "app:preview": "bun run --filter app preview",
+    "sentinel:start": "bun run --filter backend start",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },
