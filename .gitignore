@@ -43,3 +43,6 @@ app/public/mock-bank-plugin.wasm
 # Binaryen (downloaded by extism-js install for WASM compile; not project source)
 binaryen/
 binaryen*
+
+!mock-bank/certs/generate.sh
+!mock-bank/certs/notary-key.ts
