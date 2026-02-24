@@ -1,9 +1,17 @@
 // src/config.ts
-function mockBankHostForPermission() {
+function mockBankHostname() {
   try {
     return new URL("https://localhost:3443").hostname;
   } catch {
     return "localhost";
+  }
+}
+function mockBankHostWithPort() {
+  try {
+    const url = new URL("https://localhost:3443");
+    return url.port ? `${url.hostname}:${url.port}` : url.hostname;
+  } catch {
+    return "localhost:3443";
   }
 }
 var config = {
@@ -14,15 +22,17 @@ var config = {
   requests: [
     {
       method: "GET",
-      host: mockBankHostForPermission(),
+      host: mockBankHostname(),
       pathname: "/account/balance",
-      verifierUrl: "http://localhost:7047"
+      verifierUrl: "http://localhost:7047",
+      proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostWithPort()}`
     },
     {
       method: "GET",
-      host: mockBankHostForPermission(),
+      host: mockBankHostname(),
       pathname: "/account/transactions",
-      verifierUrl: "http://localhost:7047"
+      verifierUrl: "http://localhost:7047",
+      proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostWithPort()}`
     }
   ],
   urls: ["https://localhost:3443/*"]
@@ -448,13 +458,6 @@ function mockBankHost() {
     return "localhost";
   }
 }
-function mockBankHostname() {
-  try {
-    return new URL("https://localhost:3443").hostname;
-  } catch {
-    return "localhost";
-  }
-}
 var BALANCE_PATH = "/account/balance";
 var balanceUrl = () => `${mockBankOrigin()}${BALANCE_PATH}`;
 async function onClick() {
@@ -486,7 +489,7 @@ async function onClick() {
       },
       {
         verifierUrl: "http://localhost:7047",
-        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostname()}`,
+        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHost()}`,
         maxRecvData: 4096,
         maxSentData: 2048,
         handlers: [

@@ -43,6 +43,34 @@ PORT=8443 bun run bank:start
 
 Use `Ctrl+C` to stop the server.
 
+### Running with Docker
+
+The image is **standalone**: you can build and deploy it without the rest of the monorepo. Use the `mock-bank` directory as the build context (see below).
+
+The image does **not** include TLS certificates. The deployment must provide `server.key` and `server.cert` (e.g. from the host or a secrets manager) and mount them into the container at `/app/certs/`.
+
+From the **mock-bank** directory (or repo root with `-f mock-bank/Dockerfile`):
+
+```bash
+# Build
+docker build -t mock-bank ./mock-bank
+
+# Run: mount a directory containing server.key and server.cert into /app/certs
+docker run --rm -p 3443:3443 -v /path/on/host/certs:/app/certs mock-bank
+```
+
+Example for local development (generate certs first with `bash mock-bank/certs/generate.sh` from repo root):
+
+```bash
+docker run --rm -p 3443:3443 -v "$(pwd)/mock-bank/certs:/app/certs" mock-bank
+```
+
+To use a different port:
+
+```bash
+docker run --rm -p 8443:8443 -e PORT=8443 -v /path/on/host/certs:/app/certs mock-bank
+```
+
 ## API Reference
 
 All responses use `application/json`. TLS is required (HTTPS).
