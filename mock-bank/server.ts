@@ -4,6 +4,7 @@
  */
 /// <reference path="./cookie-parser.d.ts" />
 import express from "express";
+import http from "http";
 import https from "https";
 import cookieParser from "cookie-parser";
 import { readFileSync } from "fs";
@@ -93,18 +94,20 @@ export function startMockBank(port: number): Promise<{ stop: () => void }> {
   app.use("/auth", authRoutes);
   app.use("/account", accountRoutes);
 
-  let key: Buffer;
-  let cert: Buffer;
+  // Use HTTPS if certs are present (local dev), otherwise HTTP (cloud deployment — TLS is
+  // terminated at the platform edge by a trusted cert, e.g. Render / GCloud load balancer).
+  let key: Buffer | undefined;
+  let cert: Buffer | undefined;
   try {
     key = readFileSync(keyPath);
     cert = readFileSync(certPath);
-  } catch (e) {
-    throw new Error(
-      `Missing TLS certs. Run: bash mock-bank/certs/generate.sh (from repo root). Original: ${e}`
-    );
+  } catch {
+    // No certs — run plain HTTP. Expected in cloud deployments.
   }
 
-  const server = https.createServer({ key, cert }, app);
+  const server = key && cert
+    ? https.createServer({ key, cert }, app)
+    : http.createServer(app);
   // Encourage keep-alive so origin doesn't close before prover (TLSNotary state error).
   server.keepAliveTimeout = 65000;
   server.headersTimeout = 66000;
@@ -124,7 +127,9 @@ export function startMockBank(port: number): Promise<{ stop: () => void }> {
 if (import.meta.main) {
   const port = Number(process.env.PORT) || 3443;
   startMockBank(port).then(({ stop }) => {
-    console.log(`Mock Bank HTTPS on https://localhost:${port}`);
+    const hasCerts = (() => { try { readFileSync(keyPath); return true; } catch { return false; } })();
+    const scheme = hasCerts ? "https" : "http";
+    console.log(`Mock Bank ${hasCerts ? "HTTPS" : "HTTP"} on ${scheme}://localhost:${port}`);
     process.on("SIGINT", () => {
       stop();
       process.exit(0);

@@ -1,6 +1,7 @@
-# Mock Bank HTTPS server for zkCredit attestation.
-# TLS certificates are not generated at build time; the deployment must provide
-# certs/server.key and certs/server.cert (e.g. via volume mount into /app/certs).
+# Mock Bank server for zkCredit attestation.
+# Runs plain HTTP — TLS is terminated by the platform (Render, GCloud, etc.)
+# which provides a trusted certificate. For local dev, run with certs present
+# to get HTTPS on port 3443.
 FROM oven/bun:1-alpine
 
 WORKDIR /app
@@ -15,8 +16,10 @@ COPY routes ./routes
 COPY data ./data
 COPY certs/notary-key.ts certs/
 
-EXPOSE 3443
+# PORT is set by the platform (Render uses 10000, GCloud varies).
+# Defaults to 3000 if not set.
+ENV PORT=3000
 
-ENV PORT=3443
+EXPOSE 3000
 
 CMD ["bun", "run", "server.ts"]
