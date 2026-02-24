@@ -6,7 +6,7 @@ import { mkdtempSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
 import type { DisclosedData } from "../../types.js";
-import { ingest } from "../ingest.js";
+import { ingest, ingestFromJsPresentation } from "../ingest.js";
 
 let dataDir: string;
 
@@ -58,5 +58,35 @@ describe("ingest", () => {
         },
       })
     ).rejects.toThrow();
+  });
+});
+
+describe("ingestFromJsPresentation", () => {
+  test("valid JS presentation with results → attestation stored with mapped DisclosedData", async () => {
+    const presentation = {
+      results: [
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "balance" }, value: "25000" },
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "currency" }, value: "USD" },
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "account_id" }, value: "acc-1" },
+      ],
+    };
+    const att = await ingestFromJsPresentation(presentation, "0x1111111111111111111111111111111111111111");
+    expect(att.id).toBeDefined();
+    expect(att.user_address).toBe("0x1111111111111111111111111111111111111111");
+    expect(att.disclosed_data.balance).toBe(25000);
+    expect(att.disclosed_data.currency).toBe("USD");
+    expect(att.disclosed_data.account_id_hash).toBeDefined();
+    expect(att.disclosed_data.transactions_summary.months).toEqual([]);
+  });
+
+  test("missing balance in results throws", async () => {
+    const presentation = {
+      results: [
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { path: "currency" }, value: "USD" },
+      ],
+    };
+    await expect(
+      ingestFromJsPresentation(presentation, "0x1111111111111111111111111111111111111111")
+    ).rejects.toThrow("balance");
   });
 });

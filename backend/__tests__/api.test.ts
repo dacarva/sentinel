@@ -119,4 +119,24 @@ describe("Sentinel API", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  test("POST /attest with JS presentation (results) returns 201", async () => {
+    const res = await fetch(`${BASE}/attest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_address: "0x4444444444444444444444444444444444444444",
+        presentation: {
+          results: [
+            { type: "RECV", part: "BODY", action: "REVEAL", params: { path: "balance" }, value: "10000" },
+            { type: "RECV", part: "BODY", action: "REVEAL", params: { path: "currency" }, value: "USD" },
+          ],
+        },
+      }),
+    });
+    expect(res.status).toBe(201);
+    const data = (await res.json()) as { attestation_id?: string; status?: string };
+    expect(data.attestation_id).toBeDefined();
+    expect(data.status).toBe("pending");
+  });
 });

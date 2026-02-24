@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["mock-bank","app","backend","tlsn-plugin"],
+  "workspaces": ["mock-bank","app","backend","plugin-sdk", "tlsn-common", "plugin"],
   "scripts": {
     "bank:start": "bun run --filter mock-bank start",
     "app:dev": "bun run --filter app dev",
@@ -11,7 +11,7 @@
     "app:lint": "bun run --filter app lint",
     "app:preview": "bun run --filter app preview",
     "sentinel:start": "bun run --filter backend start",
-    "plugin:build": "bun run --filter mock-bank-plugin build && cp tlsn-plugin/dist/mock-bank-plugin.tlsn.wasm app/public/mock-bank-plugin.wasm",
+    "plugin:build": "bun run --filter @tlsn/ts-plugin-sample build && cp plugin/build/ts-plugin-sample.js app/public/ts-plugin-sample.js",
     "test": "bun test",
     "test:watch": "bun test --watch"
   },

@@ -7,7 +7,7 @@ This guide walks through manual test scenarios for the Mock Bank, Sentinel backe
 ## 1. Prerequisites
 
 - **Bun** (or Node 18+) at repo root.
-- **Optional for full E2E:** Rust toolchain (for `wstcp`), TLSN browser extension, Mock Bank TLSNotary plugin (WASM). How to install:
+- **Optional for full E2E:** Rust toolchain (for `wstcp`), TLSN browser extension, Mock Bank TLSNotary plugin (JavaScript). How to install:
 
 ### 1.1 Optional: Install E2E prerequisites
 
@@ -16,7 +16,7 @@ This guide walks through manual test scenarios for the Mock Bank, Sentinel backe
 | **Rust toolchain** | [rustup.rs](https://rustup.rs): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` (then restart the terminal). |
 | **wstcp** (WebSocket proxy) | With Rust installed: `cargo install wstcp`. See [github.com/sile/wstcp](https://github.com/sile/wstcp). |
 | **TLSN browser extension** | [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [tlsn-extension releases](https://github.com/tlsnotary/tlsn-extension/releases). After install, open the extension → **Options** to set Proxy API and Notary API. |
-| **Mock Bank plugin (WASM)** | Install **extism-js** (see [tlsn-plugin/README.md](../tlsn-plugin/README.md)), then from repo root run `bun run plugin:build`. This builds the `tlsn-plugin` workspace and copies `mock-bank-plugin.wasm` to `app/public/`. Or from `tlsn-plugin/` run `bun run build`; then copy `dist/mock-bank-plugin.tlsn.wasm` to `app/public/mock-bank-plugin.wasm` or set `VITE_TLSN_PLUGIN_URL` in `app/.env`. |
+| **Mock Bank plugin (JS)** | From repo root run `bun run plugin:build`. This builds the `plugin` workspace and copies `plugin/build/ts-plugin-sample.js` to `app/public/ts-plugin-sample.js`. The app fetches this and runs it via `window.tlsn.execCode(code)`. Set `VITE_TLSN_PLUGIN_URL` in `app/.env` to override the default `/ts-plugin-sample.js`. |
 
 ---
 
@@ -259,14 +259,14 @@ Open the URL shown (e.g. `http://localhost:5173`) in a browser where the TLSN ex
 Copy `app/.env.example` to `app/.env` and set:
 
 - `VITE_SENTINEL_API` — backend base URL (default `http://localhost:3000`).
-- `VITE_TLSN_PLUGIN_URL` — Mock Bank plugin WASM URL (default `/mock-bank-plugin.wasm`).
+- `VITE_TLSN_PLUGIN_URL` — Mock Bank plugin JS URL (default `/ts-plugin-sample.js`).
 
 ### 5.3 Prerequisites for real TLSNotary flow
 
 1. **TLSN extension** installed; in Options set Proxy API and Notary API (see [app/README.md](../app/README.md)).
 2. **Mock Bank** running (`bun run bank:start`).
 3. **wstcp** proxy: `wstcp --bind-addr 127.0.0.1:55688 localhost:3443`, Proxy API in extension set to `ws://localhost:55688`.
-4. **Mock Bank plugin** built and served (e.g. `mock-bank-plugin.wasm` in `app/public/` or URL in `VITE_TLSN_PLUGIN_URL`).
+4. **Mock Bank plugin** built and served (e.g. `ts-plugin-sample.js` in `app/public/` or URL in `VITE_TLSN_PLUGIN_URL`).
 5. **Sentinel backend** running and reachable at `VITE_SENTINEL_API`.
 
 ### 5.4 Manual test: UI and validation
@@ -282,7 +282,7 @@ Copy `app/.env.example` to `app/.env` and set:
 
 **If extension/plugin/backend are not fully set up:**
 
-- **Expected:** Error such as “TLSN extension not found”, or a runPlugin/network error. This confirms the UI and client logic run; fix extension/plugin/backend as needed.
+- **Expected:** Error such as “TLSN extension not found”, or an execCode/plugin fetch error. This confirms the UI and client logic run; fix extension/plugin/backend as needed.
 
 **If extension is missing:**
 
@@ -297,7 +297,7 @@ With Mock Bank, wstcp, extension, plugin, and backend all running and configured
 3. Click **Prove with TLSNotary**.
 4. Wait for “connecting” → “proving” → “submitting”.
 
-**Expected:** Success message and an `attestation_id` shown. The backend must accept the presentation format produced by the extension (or be wired to a verifier that does). If the backend expects base64 and the client sends JSON (`notaryUrl`, `session`, `substrings`), verification may fail until the verifier or API is updated to accept that format.
+**Expected:** Success message and an `attestation_id` shown. The app sends the JS plugin proof format (`presentation: { results }`) and the backend maps it to attestation data.
 
 ### 5.6 Manual test: Verify after attest
 
@@ -333,7 +333,8 @@ Use this order for a full manual pass:
 - **Mock Bank: “Missing TLS certs”** — Run `mock-bank/certs/generate.sh`.
 - **Backend: “Presentation verification failed”** — Without a Rust verifier, use `_mockDisclosed` in POST /attest for manual API tests. For real proofs, the verifier must be configured and accept the client’s presentation format.
 - **Client: “TLSN extension not found”** — Install the TLSNotary browser extension and reload the app tab.
-- **Client: runPlugin fails** — Ensure Mock Bank is running, wstcp proxy is running and set in extension Options, and the Mock Bank plugin WASM is built and reachable at `VITE_TLSN_PLUGIN_URL`.
+- **Client: execCode or plugin load fails** — Ensure Mock Bank is running, wstcp proxy is running and set in extension Options, and the Mock Bank plugin JS is built and reachable at `VITE_TLSN_PLUGIN_URL` (default `/ts-plugin-sample.js`).
+- **“tls connection failed” / “state error: must be in active state to close connection”** — The Mock Bank sets `Connection: keep-alive` so the prover can close the TLS connection cleanly; the plugin does not send `Connection: close`. Ensure the verifier and proxy (e.g. verifier Docker and wstcp proxy on 7047) are running and reachable. If you see verifier logs like "Expected text message for reveal_config, got: Close(None)", that usually means the extension closed the WebSocket after the prover failed—fix the prover/connection issue above first. If the error persists, try restarting the verifier/proxy or check version compatibility with the TLSNotary extension.
 - **CORS errors** — Backend allows `*` origin; ensure `VITE_SENTINEL_API` matches the backend URL the browser uses.
 
 ---
@@ -347,5 +348,6 @@ From repo root:
 | Mock Bank | `bun run bank:start` | HTTPS server on 3443 |
 | Sentinel API | `bun run sentinel:start` | Backend on 3000 |
 | App (dev) | `bun run app:dev` | Vite dev server (e.g. 5173) |
+| Plugin build | `bun run plugin:build` | Build plugin and copy to app/public/ts-plugin-sample.js |
 | Tests | `bun test` | All workspaces |
 | Backend verify CLI | `bun run --filter backend verify -- <id>` | Verify attestation by id |

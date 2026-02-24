@@ -36,6 +36,20 @@ export interface DisclosedData {
   transactions_summary: TransactionSummary;
 }
 
+/** Single handler result from plugin prove() (JS plugin flow). */
+export interface ProofResultItem {
+  type: string;
+  part: string;
+  action: string;
+  params?: { type?: string; path?: string; key?: string };
+  value: string;
+}
+
+/** Presentation format from app when using execCode + prove() results (JS plugin). */
+export interface JsPresentation {
+  results: ProofResultItem[];
+}
+
 export interface NotaryKeyPair {
   publicKey: string;
   privateKey?: string;

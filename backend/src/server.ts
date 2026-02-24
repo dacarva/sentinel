@@ -3,10 +3,10 @@
  * POST /attest, GET /attest/:id, POST /verify/:id.
  */
 import express from "express";
-import { ingest } from "./attestation/ingest.js";
+import { ingest, ingestFromJsPresentation } from "./attestation/ingest.js";
 import { loadAttestation, saveAttestation } from "./attestation/storage.js";
 import { verify } from "./verifier/index.js";
-import type { DisclosedData } from "./types.js";
+import type { DisclosedData, JsPresentation } from "./types.js";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -21,7 +21,7 @@ app.post("/attest", async (req, res) => {
   try {
     const { user_address, presentation, _mockDisclosed } = req.body as {
       user_address?: string;
-      presentation?: string;
+      presentation?: string | JsPresentation;
       _mockDisclosed?: DisclosedData;
     };
     if (!user_address || typeof user_address !== "string") {
@@ -35,6 +35,21 @@ app.post("/attest", async (req, res) => {
       res.status(400).json({
         error: "BAD_REQUEST",
         message: "presentation is required",
+      });
+      return;
+    }
+    const isJsPresentation =
+      typeof presentation === "object" &&
+      presentation !== null &&
+      Array.isArray((presentation as JsPresentation).results);
+    if (isJsPresentation) {
+      const att = await ingestFromJsPresentation(
+        presentation as JsPresentation,
+        user_address
+      );
+      res.status(201).json({
+        attestation_id: att.id,
+        status: att.status,
       });
       return;
     }

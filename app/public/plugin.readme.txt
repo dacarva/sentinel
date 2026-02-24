@@ -1,0 +1,11 @@
+Mock Bank TLSNotary plugin (JavaScript).
+
+The plugin is built from the plugin workspace in this repo. Build and copy to this folder:
+
+  From repo root: bun run plugin:build
+
+That builds the plugin and copies plugin/build/ts-plugin-sample.js to app/public/ts-plugin-sample.js.
+
+The app loads the plugin from /ts-plugin-sample.js by default, or from the URL set in VITE_TLSN_PLUGIN_URL (app/.env).
+
+Until the plugin is built, "Prove with TLSNotary" will fail when loading the plugin (fetch or execCode). Run plugin:build first.

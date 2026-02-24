@@ -53,6 +53,12 @@ router.post("/login", async (req: Request, res: Response) => {
       JWT_SECRET,
       { expiresIn: EXPIRES_IN }
     );
+    res.cookie("token", token, {
+      maxAge: EXPIRES_IN * 1000,
+      sameSite: "lax",
+      secure: true,
+      httpOnly: false,
+    });
     return res.status(200).json({ token, expires_in: EXPIRES_IN });
   } catch {
     return res.status(500).json({

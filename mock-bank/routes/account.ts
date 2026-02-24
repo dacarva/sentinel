@@ -1,6 +1,7 @@
 /**
  * GET /account/balance, GET /account/transactions — IMPLEMENTATION.md §1.
  * Protected by JWT; data from users.json by req.auth.sub (username).
+ * Accepts JWT from Authorization header or from cookie (token).
  */
 import { Router, type Request, type Response } from "express";
 import { expressjwt } from "express-jwt";
@@ -20,6 +21,16 @@ interface UserRow {
   currency: string;
   transactions: { date: string; amount: number; type: string; description: string }[];
 }
+
+/** If no Authorization header, set it from cookie so expressjwt can verify. */
+router.use((req: Request, _res, next) => {
+  const auth = req.headers.authorization;
+  const cookieToken = (req as Request & { cookies?: { token?: string } }).cookies?.token;
+  if (!auth && cookieToken) {
+    req.headers.authorization = `Bearer ${cookieToken}`;
+  }
+  next();
+});
 
 router.use(
   expressjwt({

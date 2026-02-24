@@ -5,9 +5,9 @@ import './Attest.css'
 const SENTINEL_API = import.meta.env.VITE_SENTINEL_API ?? 'http://localhost:3000'
 const PLUGIN_URL =
   import.meta.env.VITE_TLSN_PLUGIN_URL ??
-  '/mock-bank-plugin.wasm'
+  '/ts-plugin-sample.js'
 
-/** Resolve plugin URL to absolute so the extension can fetch it (background resolves relative URLs against extension origin). */
+/** Resolve plugin URL to absolute for fetch (same-origin or full URL). */
 function resolvePluginUrl(relativeOrAbsolute: string): string {
   if (typeof window === 'undefined') return relativeOrAbsolute
   if (relativeOrAbsolute.startsWith('http://') || relativeOrAbsolute.startsWith('https://')) return relativeOrAbsolute
@@ -28,6 +28,11 @@ interface AttestResult {
   status?: string
   error?: string
   message?: string
+}
+
+/** Plugin returns string from done(JSON.stringify(resp)); resp has { results }. */
+interface PluginProof {
+  results?: Array<{ type?: string; part?: string; action?: string; params?: unknown; value?: string }>;
 }
 
 export function Attest() {
@@ -60,61 +65,56 @@ export function Attest() {
       return
     }
 
+    if (typeof window.tlsn.execCode !== 'function') {
+      setStatus('error')
+      setMessage('TLSN extension does not expose execCode. Try updating the TLSNotary extension.')
+      return
+    }
+
     setStatus('connecting')
     try {
-      const client = await window.tlsn.connect()
-      setStatus('proving')
-      const params: Record<string, string> = {}
-      if (username.trim()) params.username = username.trim()
-      if (password.trim()) params.password = password.trim()
-      const c = client as Record<string, unknown>
-      const pluginParams = Object.keys(params).length ? params : undefined
-      const methodName =
-        typeof c?.runPlugin === 'function' ? 'runPlugin'
-          : typeof c?.executePlugin === 'function' ? 'executePlugin'
-          : typeof c?.execute === 'function' ? 'execute'
-          : null
-      if (!methodName) {
-        const keys = c != null && typeof c === 'object' ? Object.keys(c) : []
-        setStatus('error')
-        setMessage(`TLSN extension client has no runPlugin/executePlugin. Available: ${keys.join(', ') || 'none'}. Try updating the TLSNotary extension to a version that supports runPlugin (see tlsnotary.org/docs/extension/provider).`)
-        return
-      }
-      const absolutePluginUrl = resolvePluginUrl(PLUGIN_URL)
-      // Pass absolute URL so extension (e.g. background) can fetch the WASM; relative URLs resolve against extension origin and 404
-      // Direct method call (no .call) so extension getters/proxies work; preserves `this`
-      let proofData: unknown
-      if (methodName === 'runPlugin') {
-        proofData = await (client as { runPlugin: (url: string, params?: Record<string, string>) => Promise<unknown> }).runPlugin(absolutePluginUrl, pluginParams)
-      } else if (methodName === 'executePlugin') {
-        proofData = await (client as unknown as { executePlugin: (url: string, params?: Record<string, string>) => Promise<unknown> }).executePlugin(absolutePluginUrl, pluginParams)
-      } else {
-        proofData = await (client as unknown as { execute: (url: string, params?: Record<string, string>) => Promise<unknown> }).execute(absolutePluginUrl, pluginParams)
-      }
-
-      const proof = proofData as { notaryUrl?: string; session?: unknown; substrings?: unknown } | null
-      if (!proof || proof.notaryUrl == null) {
+      const pluginUrl = resolvePluginUrl(PLUGIN_URL)
+      const code = await fetch(pluginUrl).then((r) => {
+        if (!r.ok) throw new Error(`Plugin fetch failed: ${r.status} ${r.statusText}`)
+        return r.text()
+      })
+      const trimmed = code.trim()
+      if (trimmed.startsWith('<!') || trimmed.startsWith('<html')) {
         setStatus('error')
         setMessage(
-          'Proof was cancelled or the plugin did not return proof data. ' +
-          'After you click Accept, the extension may show more modals or steps (e.g. open Mock Bank, enter credentials, notarize). ' +
-          'Complete every step and wait until the plugin finishes; only then is the proof sent here. Do not close modals early—try again and complete the full flow.'
+          'Plugin URL returned HTML instead of JavaScript. Set VITE_TLSN_PLUGIN_URL to /ts-plugin-sample.js in app/.env (or remove it to use the default), then run "bun run plugin:build" from the repo root so app/public/ts-plugin-sample.js exists.'
         )
+        return
+      }
+      setStatus('proving')
+      const resultString = await window.tlsn.execCode(code)
+      if (resultString == null || typeof resultString !== 'string') {
+        setStatus('error')
+        setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
+        return
+      }
+      let proof: PluginProof
+      try {
+        proof = JSON.parse(resultString) as PluginProof
+      } catch {
+        setStatus('error')
+        setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
+        return
+      }
+      if (!proof.results || !Array.isArray(proof.results)) {
+        setStatus('error')
+        setMessage('Proof missing results array. Complete the full prove flow in the extension.')
         return
       }
 
       setStatus('submitting')
-      const presentation = {
-        notaryUrl: proof.notaryUrl,
-        session: proof.session,
-        substrings: proof.substrings,
-      }
+      const presentation = { results: proof.results }
       const res = await fetch(`${SENTINEL_API}/attest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           user_address: addr,
-          presentation: presentation,
+          presentation,
         }),
       })
       const data = (await res.json()) as AttestResult & { details?: unknown }
@@ -140,8 +140,8 @@ export function Attest() {
       <h1>Prove bank data with TLSNotary</h1>
       <p className="attest-intro">
         Connect the TLSNotary extension, then prove your mock bank balance and transactions.
+        When you click Prove, the extension will open the Mock Bank login in a new window; after you log in there, use the plugin overlay to run the proof, then the result is sent to your backend.
         Credentials stay in your browser and are only used by the plugin to talk to the bank.
-        You may see more than one modal—accept the first, then complete any further steps (e.g. open Mock Bank, notarize) until the plugin finishes.
       </p>
 
       <div className="attest-form">
@@ -185,7 +185,7 @@ export function Attest() {
           {status === 'idle' || status === 'error' || status === 'success'
             ? 'Prove with TLSNotary'
             : status === 'connecting'
-              ? 'Connecting to extension…'
+              ? 'Loading plugin…'
               : status === 'proving'
                 ? 'Proving…'
                 : 'Submitting to backend…'}

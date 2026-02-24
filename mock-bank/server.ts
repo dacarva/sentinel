@@ -2,8 +2,10 @@
  * Mock Bank HTTPS server — IMPLEMENTATION.md §3.
  * Uses certs/server.key and certs/server.cert.
  */
+/// <reference path="./cookie-parser.d.ts" />
 import express from "express";
 import https from "https";
+import cookieParser from "cookie-parser";
 import { readFileSync } from "fs";
 import { join } from "path";
 import authRoutes from "./routes/auth";
@@ -59,6 +61,9 @@ const LOGIN_HTML = `
         const data = await r.json();
         if (r.ok) {
           msg.className = 'msg ok'; msg.textContent = 'Signed in. You can continue in the TLSN extension.';
+          if (data.token) {
+            fetch('/account/balance', { headers: { 'Authorization': 'Bearer ' + data.token } }).catch(function() {});
+          }
         } else {
           msg.className = 'msg err'; msg.textContent = data.message || data.error || 'Login failed';
         }
@@ -75,6 +80,13 @@ const LOGIN_HTML = `
 export function startMockBank(port: number): Promise<{ stop: () => void }> {
   const app = express();
   app.use(express.json());
+  app.use(cookieParser());
+  // Keep connections open so TLSNotary prover can close cleanly (avoids "must be in active state to close connection").
+  app.use((_req, res, next) => {
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("Keep-Alive", "timeout=60");
+    next();
+  });
   app.get("/", (_req, res) => {
     res.type("html").send(LOGIN_HTML);
   });
@@ -93,6 +105,9 @@ export function startMockBank(port: number): Promise<{ stop: () => void }> {
   }
 
   const server = https.createServer({ key, cert }, app);
+  // Encourage keep-alive so origin doesn't close before prover (TLSNotary state error).
+  server.keepAliveTimeout = 65000;
+  server.headersTimeout = 66000;
 
   return new Promise((resolve) => {
     server.listen(port, () => {

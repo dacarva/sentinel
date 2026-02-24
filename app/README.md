@@ -29,8 +29,8 @@ To run the full flow (browser → TLSNotary → Mock Bank → backend) you need:
    - Hosted: `https://notary.pse.dev/v0.1.0-alpha.12`  
    - Local: `http://localhost:7047` (run from [tlsn](https://github.com/tlsnotary/tlsn): `cargo run --release --bin notary-server`)
 
-4. **Mock Bank plugin**  
-   The app calls `client.runPlugin(pluginUrl, params)`. You must build the Mock Bank plugin (from [tlsn-plugin-boilerplate](https://github.com/tlsnotary/tlsn-plugin-boilerplate)) and either put `mock-bank-plugin.wasm` in `app/public/` or set `VITE_TLSN_PLUGIN_URL` in `.env`. See `app/public/mock-bank-plugin.readme.txt`.
+4. **Mock Bank plugin (JavaScript)**  
+   The app fetches the plugin JS and calls `window.tlsn.execCode(code)`. Build the plugin from the `plugin` workspace: from repo root run `bun run plugin:build`. That produces `plugin/build/ts-plugin-sample.js` and copies it to `app/public/ts-plugin-sample.js`. The app loads it from `/ts-plugin-sample.js` by default. See `app/public/plugin.readme.txt`.
 
 5. **Sentinel backend** (for POST /attest)  
    Set `VITE_SENTINEL_API` in `.env` (default `http://localhost:3000`). The backend must be running and CORS-enabled for the app origin.
@@ -43,7 +43,7 @@ To run the full flow (browser → TLSNotary → Mock Bank → backend) you need:
 Copy `.env.example` to `.env` and adjust:
 
 - `VITE_SENTINEL_API` — Sentinel API base URL  
-- `VITE_TLSN_PLUGIN_URL` — URL of the Mock Bank plugin WASM (default `/mock-bank-plugin.wasm`)
+- `VITE_TLSN_PLUGIN_URL` — URL of the Mock Bank plugin JS (default `/ts-plugin-sample.js`)
 
 ---
 
