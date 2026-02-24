@@ -3,6 +3,9 @@
  * Env vars with defaults for balance threshold, consistency, and paths.
  */
 import type { VerificationConfig } from "./types.js";
+import EC from "elliptic";
+
+const _ec = new EC.ec("secp256k1");
 
 function envNumber(key: string, defaultValue: number): number {
   const v = process.env[key];
@@ -39,13 +42,23 @@ export function getDataDir(): string {
 /** Path to TLSNotary Rust verifier binary (optional). */
 export const VERIFIER_BINARY = envString("VERIFIER_BINARY", "");
 
-const DEFAULT_NOTARY_PUB_KEY =
-  "02a1b2c3d4e5f60718293645564738495060717283940515263748596071829304";
+const DEFAULT_NOTARY_PRIV_KEY =
+  "a1b2c3d4e5f607182936455647384950607172839405152637485960718293041";
 
-/** Notary public key hex for signature verification (secp256k1). */
-export const NOTARY_PUB_KEY = envString("NOTARY_PUB_KEY", DEFAULT_NOTARY_PUB_KEY);
-
-/** Notary public key (read at call time so tests can override env). */
-export function getNotaryPubKey(): string {
-  return envString("NOTARY_PUB_KEY", DEFAULT_NOTARY_PUB_KEY);
+/** Notary private key hex for signing attestations (secp256k1). */
+export function getNotaryPrivKey(): string {
+  return envString("NOTARY_PRIV_KEY", DEFAULT_NOTARY_PRIV_KEY);
 }
+
+/** Notary public key (read at call time so tests can override env).
+ *  When NOTARY_PUB_KEY is not set, derives it from the private key so they
+ *  always form a valid secp256k1 key pair.
+ */
+export function getNotaryPubKey(): string {
+  const envKey = process.env["NOTARY_PUB_KEY"];
+  if (envKey) return envKey;
+  return _ec.keyFromPrivate(getNotaryPrivKey(), "hex").getPublic(true, "hex");
+}
+
+/** Exported constant — kept for backwards-compat but prefer getNotaryPubKey(). */
+export const NOTARY_PUB_KEY = getNotaryPubKey();

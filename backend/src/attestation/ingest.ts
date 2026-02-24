@@ -3,15 +3,27 @@
  * Accept presentation + user_address; verify via adapter; build attestation; bind; save.
  */
 import type { Attestation, DisclosedData, JsPresentation } from "../types.js";
-import { getNotaryPubKey } from "../config.js";
+import { getNotaryPubKey, getNotaryPrivKey } from "../config.js";
+import { buildPayload } from "../verifier/signature.js";
 import { verifyPresentation } from "./verifier-adapter.js";
 import { disclosedDataFromJsPresentation } from "./presentation-from-results.js";
 import { bindUserAddress } from "./bind.js";
 import { saveAttestation, generateAttestationId } from "./storage.js";
+import EC from "elliptic";
+import { createHash } from "crypto";
 
 export interface IngestOptions {
   /** Test double: resolve with disclosed data instead of running verifier. */
   mockVerify?: (presentation: Buffer) => Promise<DisclosedData>;
+}
+
+function signPayload(att: Attestation, privKeyHex: string): string {
+  const ec = new EC.ec("secp256k1");
+  const key = ec.keyFromPrivate(privKeyHex, "hex");
+  const payload = buildPayload(att);
+  const msgHash = createHash("sha256").update(payload, "utf8").digest();
+  const sig = key.sign(msgHash);
+  return sig.r.toString("hex").padStart(64, "0") + sig.s.toString("hex").padStart(64, "0");
 }
 
 function buildAttestation(disclosed_data: DisclosedData, user_address: string): Attestation {
@@ -30,6 +42,7 @@ function buildAttestation(disclosed_data: DisclosedData, user_address: string): 
     status: "pending",
   };
   bindUserAddress(att, user_address);
+  att.notary.signature = signPayload(att, getNotaryPrivKey());
   return att;
 }
 

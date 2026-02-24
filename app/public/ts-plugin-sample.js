@@ -1,14 +1,14 @@
 // src/config.ts
 function mockBankHostname() {
   try {
-    return new URL("https://localhost:3443").hostname;
+    return new URL("https://sentinel-d75o.onrender.com").hostname;
   } catch {
     return "localhost";
   }
 }
 function mockBankHostWithPort() {
   try {
-    const url = new URL("https://localhost:3443");
+    const url = new URL("https://sentinel-d75o.onrender.com");
     return url.port ? `${url.hostname}:${url.port}` : url.hostname;
   } catch {
     return "localhost:3443";
@@ -35,7 +35,7 @@ var config = {
       proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostWithPort()}`
     }
   ],
-  urls: ["https://localhost:3443/*"]
+  urls: ["https://sentinel-d75o.onrender.com/*"]
 };
 
 // ../plugin-sdk/dist/styles.js
@@ -449,11 +449,11 @@ function PluginOverlay({
 
 // src/index.ts
 function mockBankOrigin() {
-  return "https://localhost:3443".replace(/\/$/, "");
+  return "https://sentinel-d75o.onrender.com".replace(/\/$/, "");
 }
 function mockBankHost() {
   try {
-    return new URL("https://localhost:3443").host;
+    return new URL("https://sentinel-d75o.onrender.com").host;
   } catch {
     return "localhost";
   }
@@ -490,8 +490,8 @@ async function onClick() {
       {
         verifierUrl: "http://localhost:7047",
         proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHost()}`,
-        maxRecvData: 4096,
-        maxSentData: 2048,
+        maxRecvData: 1024,
+        maxSentData: 512,
         handlers: [
           { type: "SENT", part: "START_LINE", action: "REVEAL" },
           { type: "RECV", part: "START_LINE", action: "REVEAL" },
@@ -550,7 +550,7 @@ function main() {
   const isConnected = !!(authHeader || cookie);
   const error = useState("error", null);
   useEffect(() => {
-    openWindow("https://localhost:3443");
+    openWindow("https://sentinel-d75o.onrender.com");
   }, []);
   if (isMinimized) {
     return FloatingButton({ onClick: "expandUI" });

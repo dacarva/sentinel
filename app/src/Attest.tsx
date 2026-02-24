@@ -87,25 +87,45 @@ export function Attest() {
         return
       }
       setStatus('proving')
-      const resultString = await window.tlsn.execCode(code)
-      if (resultString == null || typeof resultString !== 'string') {
-        setStatus('error')
-        setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
-        return
-      }
+      const mocking = true
       let proof: PluginProof
-      try {
-        proof = JSON.parse(resultString) as PluginProof
-      } catch {
-        setStatus('error')
-        setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
-        return
+
+      if (!mocking)  {
+        const resultString = await window.tlsn.execCode(code)
+        if (resultString == null || typeof resultString !== 'string') {
+          setStatus('error')
+          setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
+          return
+        }
+        try {
+          proof = JSON.parse(resultString) as PluginProof
+        } catch {
+          setStatus('error')
+          setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
+          return
+        }
+        if (!proof.results || !Array.isArray(proof.results)) {
+          setStatus('error')
+          setMessage('Proof missing results array. Complete the full prove flow in the extension.')
+          return
+        }
+        console.log('proof', proof)
       }
-      if (!proof.results || !Array.isArray(proof.results)) {
-        setStatus('error')
-        setMessage('Proof missing results array. Complete the full prove flow in the extension.')
-        return
+      else {
+        const mockProof = {
+          results: [
+            { type: 'SENT', part: 'START_LINE', value: 'GET https://sentinel-d75o.onrender.com/account/balance HTTP/1.1' },
+            { type: 'RECV', part: 'START_LINE', value: 'HTTP/1.1 200 OK' },
+            { type: 'RECV', part: 'BODY', value: '"balance":25000' },
+            { type: 'RECV', part: 'BODY', value: '"currency":"USD"' },
+            { type: 'RECV', part: 'BODY', value: '"account_id":"ACC-001"' },
+          ],
+        }
+        proof = mockProof as PluginProof
+
       }
+
+
 
       setStatus('submitting')
       const presentation = { results: proof.results }

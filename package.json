@@ -11,6 +11,8 @@
     "app:lint": "bun run --filter app lint",
     "app:preview": "bun run --filter app preview",
     "sentinel:start": "bun run --filter backend start",
+    "sentinel:start:inspect": "bun run --filter backend start:inspect",
+    "sentinel:start:inspect:brk": "bun run --filter backend start:inspect:brk",
     "plugin:build": "bun run --filter @tlsn/ts-plugin-sample build && cp plugin/build/ts-plugin-sample.js app/public/ts-plugin-sample.js",
     "test": "bun test",
     "test:watch": "bun test --watch"

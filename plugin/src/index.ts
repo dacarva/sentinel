@@ -77,8 +77,8 @@ async function onClick(): Promise<void> {
       {
         verifierUrl: __VERIFIER_URL__,
         proxyUrl: `${__PROXY_URL__}?token=${mockBankHost()}`,
-        maxRecvData: 4096,
-        maxSentData: 2048,
+        maxRecvData: 1024,
+        maxSentData: 512,
         handlers: [
           { type: 'SENT', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
           { type: 'RECV', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,

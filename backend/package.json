@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "bun run src/server.ts",
+    "start:inspect": "bun --inspect=127.0.0.1:6499 src/server.ts",
+    "start:inspect:brk": "bun --inspect-brk=127.0.0.1:6499 src/server.ts",
     "test": "bun test",
     "test:watch": "bun test --watch",
     "verify": "bun run src/cli-verify.ts"

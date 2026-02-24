@@ -6,10 +6,27 @@ import { createHash } from "crypto";
 import type { DisclosedData, JsPresentation, ProofResultItem, TransactionSummary } from "../types.js";
 
 function findResultByPath(results: ProofResultItem[], path: string): string | undefined {
-  const r = results.find(
+  // Preferred: newer plugins set params.path explicitly.
+  const byParams = results.find(
     (x) => x.part === "BODY" && x.params?.path === path
   );
-  return r?.value;
+  if (byParams?.value !== undefined) return byParams.value;
+
+  // Fallback for legacy plugins that only emit raw BODY lines like:
+  // { part: "BODY", value: "\"balance\":25000" }
+  const candidate = results.find(
+    (x) => x.part === "BODY" && typeof x.value === "string" && x.value.includes(`"${path}"`)
+  );
+  if (!candidate) return undefined;
+
+  const text = candidate.value as string;
+  const re = new RegExp(`"${path}"\\s*:\\s*("([^"]*)"|[^,}\\s]+)`);
+  const match = text.match(re);
+  if (!match) return undefined;
+
+  // If the value is a quoted string, return the inner part; otherwise return the token as-is.
+  if (match[2] !== undefined) return match[2];
+  return match[1];
 }
 
 function buildTransactionsSummary(results: ProofResultItem[]): TransactionSummary {
