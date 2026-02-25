@@ -459,7 +459,9 @@ function mockBankHost() {
   }
 }
 var BALANCE_PATH = "/account/balance";
+var TRANSACTIONS_PATH = "/account/transactions";
 var balanceUrl = () => `${mockBankOrigin()}${BALANCE_PATH}`;
+var transactionsUrl = () => `${mockBankOrigin()}${TRANSACTIONS_PATH}`;
 async function onClick() {
   const isRequestPending = useState("isRequestPending", false);
   if (isRequestPending) return;
@@ -476,12 +478,12 @@ async function onClick() {
   const headers = {
     Host: host,
     "Accept-Encoding": "identity",
-    "Connection": "keep-alive"
+    "Connection": "close"
   };
   if (authHeader) headers["Authorization"] = authHeader;
   if (cookie) headers["Cookie"] = cookie;
   try {
-    const resp = await prove(
+    const balanceResp = await prove(
       {
         url: balanceUrl(),
         method: "GET",
@@ -516,7 +518,31 @@ async function onClick() {
         ]
       }
     );
-    done(JSON.stringify(resp));
+    const txResp = await prove(
+      {
+        url: transactionsUrl(),
+        method: "GET",
+        headers
+      },
+      {
+        verifierUrl: "http://localhost:7047",
+        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHost()}`,
+        maxRecvData: 1024,
+        maxSentData: 512,
+        handlers: [
+          { type: "SENT", part: "START_LINE", action: "REVEAL" },
+          { type: "RECV", part: "START_LINE", action: "REVEAL" },
+          {
+            type: "RECV",
+            part: "BODY",
+            action: "REVEAL",
+            params: { type: "json", path: "transactions" }
+          }
+        ]
+      }
+    );
+    const mergedResults = [...balanceResp.results ?? [], ...txResp.results ?? []];
+    done(JSON.stringify({ results: mergedResults }));
   } catch (e) {
     setState("isRequestPending", false);
     const msg = e instanceof Error ? e.message : String(e);

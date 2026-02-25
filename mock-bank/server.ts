@@ -82,12 +82,6 @@ export function startMockBank(port: number): Promise<{ stop: () => void }> {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
-  // Keep connections open so TLSNotary prover can close cleanly (avoids "must be in active state to close connection").
-  app.use((_req, res, next) => {
-    res.setHeader("Connection", "keep-alive");
-    res.setHeader("Keep-Alive", "timeout=60");
-    next();
-  });
   app.get("/", (_req, res) => {
     res.type("html").send(LOGIN_HTML);
   });
@@ -108,9 +102,6 @@ export function startMockBank(port: number): Promise<{ stop: () => void }> {
   const server = key && cert
     ? https.createServer({ key, cert }, app)
     : http.createServer(app);
-  // Encourage keep-alive so origin doesn't close before prover (TLSNotary state error).
-  server.keepAliveTimeout = 65000;
-  server.headersTimeout = 66000;
 
   return new Promise((resolve) => {
     server.listen(port, () => {

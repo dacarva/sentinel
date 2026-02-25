@@ -64,7 +64,7 @@ async function onClick(): Promise<void> {
   const headers: Record<string, string> = {
     Host: host,
     'Accept-Encoding': 'identity',
-    'Connection': 'keep-alive',
+    'Connection': 'close',
   };
   if (authHeader) headers['Authorization'] = authHeader;
   if (cookie) headers['Cookie'] = cookie;
@@ -115,7 +115,7 @@ async function onClick(): Promise<void> {
       {
         verifierUrl: __VERIFIER_URL__,
         proxyUrl: `${__PROXY_URL__}?token=${mockBankHost()}`,
-        maxRecvData: 4096,
+        maxRecvData: 1024,
         maxSentData: 512,
         handlers: [
           { type: 'SENT', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
