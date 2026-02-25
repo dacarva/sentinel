@@ -85,3 +85,25 @@ export interface JWTPayload {
   iat: number;
   exp: number;
 }
+
+/** Handler result from TLSNotary verifier webhook */
+export interface TlsnHandlerResult {
+  type: string;       // 'SENT' | 'RECV'
+  part: string;       // 'START_LINE' | 'BODY' | 'HEADERS'
+  action: string;     // 'REVEAL' | 'PEDERSEN'
+  params?: { type?: string; path?: string; key?: string };
+  value: string;      // revealed value
+}
+
+/** Webhook payload sent by tlsn-extension verifier after MPC-TLS completes */
+export interface TlsnWebhookPayload {
+  server_name: string;
+  results: TlsnHandlerResult[];
+  session: { id: string };
+  transcript: {
+    sent: number[];
+    recv: number[];
+    sent_length: number;
+    recv_length: number;
+  };
+}

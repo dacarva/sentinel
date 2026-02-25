@@ -62,3 +62,15 @@ export function getNotaryPubKey(): string {
 
 /** Exported constant — kept for backwards-compat but prefer getNotaryPubKey(). */
 export const NOTARY_PUB_KEY = getNotaryPubKey();
+
+/** Shared secret for validating TLSN verifier webhook requests. */
+export function getTlsnWebhookSecret(): string {
+  return envString("TLSN_WEBHOOK_SECRET", "dev-local-secret");
+}
+
+/** Whether to require webhook verification for JS presentations (can be disabled for tests). */
+export function requireWebhookVerification(): boolean {
+  const val = process.env.REQUIRE_WEBHOOK;
+  if (val === undefined || val === "") return true;
+  return val.toLowerCase() !== "false";
+}

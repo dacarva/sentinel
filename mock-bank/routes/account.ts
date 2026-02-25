@@ -69,7 +69,7 @@ router.get("/transactions", async (req: Request, res: Response) => {
     const user = users.find((u) => u.username === username);
     if (!user) return res.status(404).json({ error: "NOT_FOUND", message: "User not found" });
     const transactions = user.transactions ?? [];
-    return res.status(200).json(transactions);
+    return res.status(200).json({ transactions });
   } catch (e) {
     return res.status(500).json({ error: "INTERNAL_ERROR", message: "Failed to get transactions" });
   }

@@ -87,7 +87,7 @@ export function Attest() {
         return
       }
       setStatus('proving')
-      const mocking = true
+      const mocking = false
       let proof: PluginProof
 
       if (!mocking)  {

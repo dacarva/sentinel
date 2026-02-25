@@ -157,7 +157,7 @@ graph LR
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| **zkTLS Provider** | Reclaim Protocol | ~1-2 hour integration vs ~4-8 hours for TLSNotary. Circuit interface is provider-agnostic for future swap. |
+| **zkTLS Provider** | TLSNotary (v0.1.0-alpha.14) | MPC-TLS browser extension + local verifier. Webhook-based verification avoids binary proof parsing. |
 | **Signature verification** | Off-circuit (off-chain) | Keeps the Noir circuit small and fast (~2s proving). Attestation binding is via Pedersen hash of data. |
 | **Hash function** | Pedersen (in-circuit) | Native to Noir/Barretenberg, much cheaper in-circuit than SHA-256. |
 | **Public inputs** | 2 Fields (threshold + hash) | Using `Field` instead of `[u8; 32]` reduces public inputs from 34 to 2, saving ~64k gas. |
@@ -173,14 +173,19 @@ graph LR
 The cryptographic binding flows unbroken from the bank's TLS session to the Aave transaction:
 
 ```
-Bank TLS Session
-  → Reclaim attestation (signed by attestor over session data)
-    → Pedersen hash of attestation data (circuit input binding)
-      → ZK proof: "I know data D such that hash(D) = H and balance(D) > T"
-        → On-chain verification: UltraVerifier confirms proof validity
-          → SentinelVerifier registers address as verified
-            → SentinelVault gates Aave access to verified addresses only
-              → Aave V3 executes supply/borrow for the Safe account
+Bank TLS Session (sentinel-d75o.onrender.com, CA-signed cert)
+  → MPC-TLS: Browser Extension + local Verifier co-participate in TLS handshake
+    → Verifier witnesses session; sends webhook to backend (X-TLSN-Secret auth)
+      → Backend stores webhook; client submits merged results[]
+        → Backend subset-matches results to stored webhook → proof is verified
+          → Backend signs Attestation (secp256k1, notary key)
+            → POST /verify checks signature + balance threshold + tx consistency
+              → isValid: true (data provably from a real TLS session)
+                → ZK proof: "I know data D such that hash(D) = H and balance(D) > T"
+                  → On-chain verification: UltraVerifier confirms proof validity
+                    → SentinelVerifier registers address as verified
+                      → SentinelVault gates Aave access to verified addresses only
+                        → Aave V3 executes supply/borrow for the Safe account
 ```
 
 **What is proven without revealing:**

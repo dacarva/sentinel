@@ -37,7 +37,9 @@ function mockBankHostname(): string {
 }
 
 const BALANCE_PATH = '/account/balance';
+const TRANSACTIONS_PATH = '/account/transactions';
 const balanceUrl = () => `${mockBankOrigin()}${BALANCE_PATH}`;
+const transactionsUrl = () => `${mockBankOrigin()}${TRANSACTIONS_PATH}`;
 
 // =============================================================================
 // PROOF GENERATION CALLBACK
@@ -68,7 +70,7 @@ async function onClick(): Promise<void> {
   if (cookie) headers['Cookie'] = cookie;
 
   try {
-    const resp = await prove(
+    const balanceResp = await prove(
       {
         url: balanceUrl(),
         method: 'GET',
@@ -104,7 +106,32 @@ async function onClick(): Promise<void> {
       }
     );
 
-    done(JSON.stringify(resp));
+    const txResp = await prove(
+      {
+        url: transactionsUrl(),
+        method: 'GET',
+        headers,
+      },
+      {
+        verifierUrl: __VERIFIER_URL__,
+        proxyUrl: `${__PROXY_URL__}?token=${mockBankHost()}`,
+        maxRecvData: 4096,
+        maxSentData: 512,
+        handlers: [
+          { type: 'SENT', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
+          { type: 'RECV', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
+          {
+            type: 'RECV',
+            part: 'BODY',
+            action: 'REVEAL',
+            params: { type: 'json', path: 'transactions' },
+          } satisfies Handler,
+        ],
+      }
+    );
+
+    const mergedResults = [...(balanceResp.results ?? []), ...(txResp.results ?? [])];
+    done(JSON.stringify({ results: mergedResults }));
   } catch (e) {
     setState('isRequestPending', false);
     const msg = e instanceof Error ? e.message : String(e);

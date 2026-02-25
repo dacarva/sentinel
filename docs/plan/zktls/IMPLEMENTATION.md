@@ -20,7 +20,7 @@ All endpoints communicate via `application/json`. Errors follow the standard for
 
 **GET /account/balance**
 - **Headers:** `Authorization: Bearer <token>`
-- **Response (200):** 
+- **Response (200):**
   ```json
   {
     "account_id": "ACC-001",
@@ -30,12 +30,25 @@ All endpoints communicate via `application/json`. Errors follow the standard for
   }
   ```
 
+**GET /account/transactions**
+- **Headers:** `Authorization: Bearer <token>`
+- **Response (200):**
+  ```json
+  {
+    "transactions": [
+      { "date": "2026-02-18", "amount": 100, "type": "credit", "description": "..." },
+      { "date": "2026-02-17", "amount": 50, "type": "debit", "description": "..." }
+    ]
+  }
+  ```
+
 ### Sentinel Attestation API
-| Endpoint | Method | Description |
-| :--- | :--- | :--- |
-| `/attest` | POST | Initiates TLSNotary session and generates attestation. |
-| `/attest/:id` | GET | Retrieves stored attestation status and data. |
-| `/verify/:id` | POST | Runs backend verification (sig, balance, consistency). |
+| Endpoint | Method | Auth | Description |
+| :--- | :--- | :--- | :--- |
+| `/webhook/tlsn` | POST | X-TLSN-Secret header | Receives MPC-TLS proof webhook from local TLSNotary verifier. |
+| `/attest` | POST | None | Initiates TLSNotary session and generates attestation. |
+| `/attest/:id` | GET | None | Retrieves stored attestation status and data. |
+| `/verify/:id` | POST | None | Runs backend verification (sig, balance, consistency). |
 
 **POST /attest**
 - **Request Body:** `{ "user_address": "0x123...", "username": "user_pass", "password": "..." }`
@@ -115,6 +128,21 @@ export interface JWTPayload {
   iat: number;
   exp: number;
 }
+
+export interface TlsnHandlerResult {
+  type: string;       // 'SENT' | 'RECV'
+  part: string;       // 'START_LINE' | 'BODY'
+  action: string;     // 'REVEAL'
+  params?: { type?: string; path?: string };
+  value: string;
+}
+
+export interface TlsnWebhookPayload {
+  server_name: string;
+  results: TlsnHandlerResult[];
+  session: { id: string };
+  transcript: { sent: number[]; recv: number[]; sent_length: number; recv_length: number };
+}
 ```
 
 ---
@@ -173,13 +201,16 @@ Standard response for all 4xx/5xx errors:
 
 ## 5. Configuration
 
-Configuration is managed via `app/src/config.ts` and environment variables.
+Configuration is managed via `backend/src/config.ts` and environment variables.
 
 | Parameter | Env Var | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `balanceThreshold` | `BALANCE_THRESHOLD` | `1000` | Minimum balance in USD. |
 | `minTxPerMonth` | `MIN_TX_PER_MONTH` | `3` | Required activity per month. |
 | `consistencyMonths` | `CONSISTENCY_MONTHS` | `3` | Months to check back. |
+| `requireWebhook` | `REQUIRE_WEBHOOK` | `true` | Require verifier webhook before accepting JS presentation. Set to `false` for tests. |
+| `tlsnWebhookSecret` | `TLSN_WEBHOOK_SECRET` | `dev-local-secret` | Shared secret for validating X-TLSN-Secret header on /webhook/tlsn. |
+| `notaryPrivKey` | `NOTARY_PRIV_KEY` | (dev default) | secp256k1 private key for signing attestations. |
 
 The `verifier/index.ts` reads these values and passes them to the balance and consistency modules.
 

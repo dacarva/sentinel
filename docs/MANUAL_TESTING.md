@@ -7,15 +7,15 @@ This guide walks through manual test scenarios for the Mock Bank, Sentinel backe
 ## 1. Prerequisites
 
 - **Bun** (or Node 18+) at repo root.
-- **Optional for full E2E:** Rust toolchain (for `wstcp`), TLSN browser extension, Mock Bank TLSNotary plugin (JavaScript). How to install:
+- **Optional for full E2E:** Rust toolchain (for TLSNotary verifier), TLSN browser extension, Mock Bank TLSNotary plugin (JavaScript). How to install:
 
 ### 1.1 Optional: Install E2E prerequisites
 
 | Component | How to install |
 |-----------|----------------|
 | **Rust toolchain** | [rustup.rs](https://rustup.rs): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs \| sh` (then restart the terminal). |
-| **wstcp** (WebSocket proxy) | With Rust installed: `cargo install wstcp`. See [github.com/sile/wstcp](https://github.com/sile/wstcp). |
-| **TLSN browser extension** | [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [tlsn-extension releases](https://github.com/tlsnotary/tlsn-extension/releases). After install, open the extension → **Options** to set Proxy API and Notary API. |
+| **TLSNotary Verifier** | Clone `https://github.com/tlsnotary/tlsn-extension`, then: `cd packages/verifier && cargo build --release`. Binary at `target/release/tlsn-verifier`. Configure `config.yaml` with webhook for `sentinel-d75o.onrender.com`. |
+| **TLSN browser extension** | [Chrome Web Store](https://chromewebstore.google.com/detail/gcfkkledipjbgdbimfpijgbkhajiaaph) or [tlsn-extension releases](https://github.com/tlsnotary/tlsn-extension/releases). After install, open the extension → **Options** to set Proxy API (`ws://localhost:7047/proxy`) and Notary API (`http://localhost:7047`). |
 | **Mock Bank plugin (JS)** | From repo root run `bun run plugin:build`. This builds the `plugin` workspace and copies `plugin/build/ts-plugin-sample.js` to `app/public/ts-plugin-sample.js`. The app fetches this and runs it via `window.tlsn.execCode(code)`. Set `VITE_TLSN_PLUGIN_URL` in `app/.env` to override the default `/ts-plugin-sample.js`. |
 
 ---
@@ -93,7 +93,7 @@ curl -k -s https://localhost:3443/account/transactions \
   -H "Authorization: Bearer $TOKEN" | jq
 ```
 
-**Expected:** `200 OK`, array of transactions (e.g. dates, amounts, types, descriptions).
+**Expected:** `200 OK`, object with `transactions` key containing array (e.g. `{ "transactions": [ { "date": "...", "amount": 100, ... } ] }`).
 
 ### 2.7 Test: Balance without auth
 
@@ -263,11 +263,14 @@ Copy `app/.env.example` to `app/.env` and set:
 
 ### 5.3 Prerequisites for real TLSNotary flow
 
-1. **TLSN extension** installed; in Options set Proxy API and Notary API (see [app/README.md](../app/README.md)).
-2. **Mock Bank** running (`bun run bank:start`).
-3. **wstcp** proxy: `wstcp --bind-addr 127.0.0.1:55688 localhost:3443`, Proxy API in extension set to `ws://localhost:55688`.
-4. **Mock Bank plugin** built and served (e.g. `ts-plugin-sample.js` in `app/public/` or URL in `VITE_TLSN_PLUGIN_URL`).
-5. **Sentinel backend** running and reachable at `VITE_SENTINEL_API`.
+1. **TLSN extension** installed; in Options set:
+   - Notary API: `http://localhost:7047`
+   - Proxy API: `ws://localhost:7047/proxy`
+2. **TLSNotary Verifier** running (`./target/release/tlsn-verifier` from `tlsn-extension/packages/verifier`).
+   Configure `config.yaml` with webhook pointing to `http://localhost:3000/webhook/tlsn`.
+3. **Mock Bank plugin** built and served (default `/ts-plugin-sample.js` in `app/public/`).
+4. **Sentinel backend** running at `VITE_SENTINEL_API` with `REQUIRE_WEBHOOK=true` (default).
+   The deployed mock bank at https://sentinel-d75o.onrender.com is already running — no local startup needed.
 
 ### 5.4 Manual test: UI and validation
 
@@ -309,7 +312,79 @@ With Mock Bank, wstcp, extension, plugin, and backend all running and configured
 
 ---
 
-## 6. End-to-End Checklist
+## 6. Webhook Endpoint (POST /webhook/tlsn)
+
+### 6.1 Test: Webhook rejected without secret
+
+```bash
+curl -X POST http://localhost:3000/webhook/tlsn \
+  -H "Content-Type: application/json" \
+  -d '{
+    "server_name": "sentinel-d75o.onrender.com",
+    "results": [],
+    "session": {"id": "test"},
+    "transcript": {"sent": [], "recv": [], "sent_length": 0, "recv_length": 0}
+  }'
+```
+
+**Expected:** `401 UNAUTHORIZED`
+
+### 6.2 Test: Webhook accepted with correct secret
+
+```bash
+curl -X POST http://localhost:3000/webhook/tlsn \
+  -H "Content-Type: application/json" \
+  -H "X-TLSN-Secret: dev-local-secret" \
+  -d '{
+    "server_name": "sentinel-d75o.onrender.com",
+    "results": [
+      {
+        "type": "RECV",
+        "part": "BODY",
+        "action": "REVEAL",
+        "params": {"type": "json", "path": "balance"},
+        "value": "25000"
+      }
+    ],
+    "session": {"id": "test-session"},
+    "transcript": {"sent": [], "recv": [], "sent_length": 0, "recv_length": 0}
+  }'
+```
+
+**Expected:** `200 { "ok": true }`
+
+### 6.3 Test: POST /attest rejected without prior webhook
+
+```bash
+curl -X POST http://localhost:3000/attest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "user_address": "0x1111111111111111111111111111111111111111",
+    "presentation": {
+      "results": [
+        {
+          "type": "RECV",
+          "part": "BODY",
+          "action": "REVEAL",
+          "params": {"type": "json", "path": "balance"},
+          "value": "25000"
+        }
+      ]
+    }
+  }'
+```
+
+**Expected:** `422 WEBHOOK_REQUIRED`
+
+### 6.4 Test: Run backend unit tests (disables webhook requirement)
+
+```bash
+REQUIRE_WEBHOOK=false bun test
+```
+
+---
+
+## 7. End-to-End Checklist
 
 Use this order for a full manual pass:
 
@@ -328,18 +403,20 @@ Use this order for a full manual pass:
 
 ---
 
-## 7. Troubleshooting
+## 8. Troubleshooting
 
 - **Mock Bank: “Missing TLS certs”** — Run `mock-bank/certs/generate.sh`.
-- **Backend: “Presentation verification failed”** — Without a Rust verifier, use `_mockDisclosed` in POST /attest for manual API tests. For real proofs, the verifier must be configured and accept the client’s presentation format.
+- **Backend: “WEBHOOK_REQUIRED”** — Ensure the TLSNotary verifier is running (`./target/release/tlsn-verifier`) with `config.yaml` configured for `sentinel-d75o.onrender.com` → `http://localhost:3000/webhook/tlsn` with correct `X-TLSN-Secret: dev-local-secret`.
+- **Backend: “Presentation verification failed”** — For testing without the verifier, use `_mockDisclosed` in POST /attest (see 3.2) or run tests with `REQUIRE_WEBHOOK=false bun test`.
 - **Client: “TLSN extension not found”** — Install the TLSNotary browser extension and reload the app tab.
-- **Client: execCode or plugin load fails** — Ensure Mock Bank is running, wstcp proxy is running and set in extension Options, and the Mock Bank plugin JS is built and reachable at `VITE_TLSN_PLUGIN_URL` (default `/ts-plugin-sample.js`).
-- **“tls connection failed” / “state error: must be in active state to close connection”** — The Mock Bank sets `Connection: keep-alive` so the prover can close the TLS connection cleanly; the plugin does not send `Connection: close`. Ensure the verifier and proxy (e.g. verifier Docker and wstcp proxy on 7047) are running and reachable. If you see verifier logs like "Expected text message for reveal_config, got: Close(None)", that usually means the extension closed the WebSocket after the prover failed—fix the prover/connection issue above first. If the error persists, try restarting the verifier/proxy or check version compatibility with the TLSNotary extension.
+- **Client: execCode or plugin load fails** — Ensure the TLSNotary verifier is running on port 7047, and the Mock Bank plugin JS is built and reachable at `VITE_TLSN_PLUGIN_URL` (default `/ts-plugin-sample.js`).
+- **”tls connection failed” / “state error: must be in active state to close connection”** — Ensure the TLSNotary verifier is running (`./target/release/tlsn-verifier` from `tlsn-extension/packages/verifier`). Check extension Options has Notary API = `http://localhost:7047` and Proxy API = `ws://localhost:7047/proxy`. If you see verifier logs like “Expected text message for reveal_config, got: Close(None)”, the extension closed the WebSocket—try restarting the verifier or checking version compatibility.
 - **CORS errors** — Backend allows `*` origin; ensure `VITE_SENTINEL_API` matches the backend URL the browser uses.
+- **”TLSN_SECRET mismatch”** — Verify verifier `config.yaml` has `X-TLSN-Secret: dev-local-secret` matching backend env var `TLSN_WEBHOOK_SECRET=dev-local-secret`.
 
 ---
 
-## 8. Reference: Monorepo scripts
+## 9. Reference: Monorepo scripts
 
 From repo root:
 
