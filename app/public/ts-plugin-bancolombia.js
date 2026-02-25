@@ -1,41 +1,22 @@
 // src/config.ts
-function mockBankHostname() {
-  try {
-    return new URL("https://sentinel-d75o.onrender.com").hostname;
-  } catch {
-    return "localhost";
-  }
-}
-function mockBankHostWithPort() {
-  try {
-    const url = new URL("https://sentinel-d75o.onrender.com");
-    return url.port ? `${url.hostname}:${url.port}` : url.hostname;
-  } catch {
-    return "localhost:3443";
-  }
-}
-var config = {
-  name: "Mock Bank Prover",
-  description: "This plugin will prove your Mock Bank balance and account data for zkCredit attestation.",
+var BANCOLOMBIA_HOST = "canalpersonas-ext.apps.bancolombia.com";
+var BALANCE_PATH = "/super-svp/api/v1/security-filters/ch-ms-deposits/hybrid/accounts/customization/consolidated-balance";
+var LOGIN_URL = "https://svpersonas.apps.bancolombia.com/*";
+const config = {
+  name: "Bancolombia Prover",
+  description: "Proves your Bancolombia account balance for zkCredit attestation.",
   version: "0.1.0",
-  author: "TLSN Team",
+  author: "Sentinel Team",
   requests: [
     {
       method: "GET",
-      host: mockBankHostname(),
-      pathname: "/account/balance",
+      host: BANCOLOMBIA_HOST,
+      pathname: BALANCE_PATH,
       verifierUrl: "http://localhost:7047",
-      proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostWithPort()}`
-    },
-    {
-      method: "GET",
-      host: mockBankHostname(),
-      pathname: "/account/transactions",
-      verifierUrl: "http://localhost:7047",
-      proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHostWithPort()}`
+      proxyUrl: `${"ws://localhost:7047/proxy"}?token=${BANCOLOMBIA_HOST}`
     }
   ],
-  urls: ["https://sentinel-d75o.onrender.com/*"]
+  urls: [LOGIN_URL]
 };
 
 // ../plugin-sdk/dist/styles.js
@@ -264,7 +245,7 @@ function OverlayHeader({ title, onMinimize }) {
   return div(
     {
       style: inlineStyle(
-        background("linear-gradient(135deg, #667eea 0%, #764ba2 100%)"),
+        background("linear-gradient(135deg, #FDD835 0%, #F9A825 100%)"),
         paddingY("sm"),
         paddingX("md"),
         display("flex"),
@@ -351,7 +332,7 @@ function ProveButton({ onClick: onClick2, isPending }) {
       style: inlineStyle(
         width("100%"),
         padding("sm"),
-        background("linear-gradient(135deg, #667eea 0%, #764ba2 100%)"),
+        background("linear-gradient(135deg, #FDD835 0%, #F9A825 100%)"),
         color("white"),
         border("none"),
         borderRadius("sm"),
@@ -381,7 +362,7 @@ function LoginPrompt() {
         border("1px solid #ffeaa7")
       )
     },
-    ["Please log in to the Mock Bank page above to continue"]
+    ["Please log in to Bancolombia Sucursal Virtual in the opened window to continue"]
   );
 }
 
@@ -403,7 +384,6 @@ function PluginOverlay({
         width("280px"),
         borderRadius("md"),
         { borderRadius: "8px 8px 0 0" },
-        // Custom override for specific corner rounding
         bgColor("white"),
         boxShadow("md"),
         zIndex("999999"),
@@ -448,52 +428,67 @@ function PluginOverlay({
 }
 
 // src/index.ts
-function mockBankOrigin() {
-  return "https://sentinel-d75o.onrender.com".replace(/\/$/, "");
-}
-function mockBankHost() {
-  try {
-    return new URL("https://sentinel-d75o.onrender.com").host;
-  } catch {
-    return "localhost";
+var BANCOLOMBIA_HOST2 = "canalpersonas-ext.apps.bancolombia.com";
+var BALANCE_PATH2 = "/super-svp/api/v1/security-filters/ch-ms-deposits/hybrid/accounts/customization/consolidated-balance";
+var BALANCE_URL = `https://${BANCOLOMBIA_HOST2}${BALANCE_PATH2}`;
+var LOGIN_URL2 = "https://svpersonas.apps.bancolombia.com";
+function generateUUID() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
   }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0;
+    const v = c === "x" ? r : r & 3 | 8;
+    return v.toString(16);
+  });
 }
-var BALANCE_PATH = "/account/balance";
-var TRANSACTIONS_PATH = "/account/transactions";
-var balanceUrl = () => `${mockBankOrigin()}${BALANCE_PATH}`;
-var transactionsUrl = () => `${mockBankOrigin()}${TRANSACTIONS_PATH}`;
+function formatTimestamp() {
+  const d = /* @__PURE__ */ new Date();
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const pad3 = (n) => String(n).padStart(3, "0");
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}:${pad3(d.getMilliseconds())}`;
+}
 async function onClick() {
   const isRequestPending = useState("isRequestPending", false);
   if (isRequestPending) return;
   setState("isRequestPending", true);
   setState("error", null);
-  const authHeader = useState("authorization", null);
-  const cookie = useState("cookie", null);
-  if (!authHeader && !cookie) {
+  const authorization = useState("authorization", null);
+  const sessionTracker = useState("sessionTracker", null);
+  if (!authorization) {
     setState("isRequestPending", false);
-    setState("error", "No auth captured. Log in on the Mock Bank page and ensure a request to /account/ or /auth/ was made.");
+    setState("error", "No auth captured. Log in to Bancolombia and wait for the connection indicator.");
     return;
   }
-  const host = mockBankHost();
   const headers = {
-    Host: host,
+    Host: BANCOLOMBIA_HOST2,
     "Accept-Encoding": "identity",
-    "Connection": "close"
+    Connection: "close",
+    Authorization: authorization,
+    channel: "SVP",
+    "app-version": "3.0.27",
+    "device-id": "web-sentinel-prover",
+    "device-info": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+    ip: "127.0.0.1",
+    "platform-type": "web",
+    "message-id": generateUUID(),
+    "request-timestamp": formatTimestamp()
   };
-  if (authHeader) headers["Authorization"] = authHeader;
-  if (cookie) headers["Cookie"] = cookie;
+  if (sessionTracker) {
+    headers["session-tracker"] = sessionTracker;
+  }
   try {
     const balanceResp = await prove(
       {
-        url: balanceUrl(),
+        url: BALANCE_URL,
         method: "GET",
         headers
       },
       {
         verifierUrl: "http://localhost:7047",
-        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHost()}`,
-        maxRecvData: 1024,
-        maxSentData: 512,
+        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${BANCOLOMBIA_HOST2}`,
+        maxRecvData: 16384,
+        maxSentData: 8192,
         handlers: [
           { type: "SENT", part: "START_LINE", action: "REVEAL" },
           { type: "RECV", part: "START_LINE", action: "REVEAL" },
@@ -501,48 +496,24 @@ async function onClick() {
             type: "RECV",
             part: "BODY",
             action: "REVEAL",
-            params: { type: "json", path: "balance" }
+            params: { type: "json", path: "data.accounts.0.balances.available" }
           },
           {
             type: "RECV",
             part: "BODY",
             action: "REVEAL",
-            params: { type: "json", path: "currency" }
+            params: { type: "json", path: "data.accounts.0.currency" }
           },
           {
             type: "RECV",
             part: "BODY",
             action: "REVEAL",
-            params: { type: "json", path: "account_id" }
+            params: { type: "json", path: "data.accounts.0.number" }
           }
         ]
       }
     );
-    const txResp = await prove(
-      {
-        url: transactionsUrl(),
-        method: "GET",
-        headers
-      },
-      {
-        verifierUrl: "http://localhost:7047",
-        proxyUrl: `${"ws://localhost:7047/proxy"}?token=${mockBankHost()}`,
-        maxRecvData: 1024,
-        maxSentData: 512,
-        handlers: [
-          { type: "SENT", part: "START_LINE", action: "REVEAL" },
-          { type: "RECV", part: "START_LINE", action: "REVEAL" },
-          {
-            type: "RECV",
-            part: "BODY",
-            action: "REVEAL",
-            params: { type: "json", path: "transactions" }
-          }
-        ]
-      }
-    );
-    const mergedResults = [...balanceResp.results ?? [], ...txResp.results ?? []];
-    done(JSON.stringify({ results: mergedResults }));
+    done(JSON.stringify({ results: balanceResp.results, bank: "bancolombia" }));
   } catch (e) {
     setState("isRequestPending", false);
     const msg = e instanceof Error ? e.message : String(e);
@@ -558,31 +529,30 @@ function minimizeUI() {
 function main() {
   const isMinimized = useState("isMinimized", false);
   const isRequestPending = useState("isRequestPending", false);
-  const authHeader = useState("authorization", null);
-  const cookie = useState("cookie", null);
-  if (!authHeader && !cookie) {
+  const authorization = useState("authorization", null);
+  if (!authorization) {
     const [header] = useHeaders(
       (headers) => headers.filter(
-        (h) => h.url.includes(mockBankOrigin()) && (h.url.includes(BALANCE_PATH) || h.url.includes("/account/") || h.url.includes("/auth/"))
+        (h) => h.url.includes(BANCOLOMBIA_HOST2) && h.requestHeaders.some((rh) => rh.name.toLowerCase() === "authorization")
       )
     );
     if (header) {
-      const a = header.requestHeaders.find((h) => h.name.toLowerCase() === "authorization")?.value;
-      const c = header.requestHeaders.find((h) => h.name === "Cookie")?.value;
-      if (a && !authHeader) setState("authorization", a);
-      if (c && !cookie) setState("cookie", c);
+      const auth = header.requestHeaders.find((h) => h.name.toLowerCase() === "authorization")?.value;
+      const tracker = header.requestHeaders.find((h) => h.name.toLowerCase() === "session-tracker")?.value;
+      if (auth) setState("authorization", auth);
+      if (tracker) setState("sessionTracker", tracker);
     }
   }
-  const isConnected = !!(authHeader || cookie);
+  const isConnected = !!authorization;
   const error = useState("error", null);
   useEffect(() => {
-    openWindow("https://sentinel-d75o.onrender.com");
+    openWindow(LOGIN_URL2);
   }, []);
   if (isMinimized) {
     return FloatingButton({ onClick: "expandUI" });
   }
   return PluginOverlay({
-    title: "Mock Bank Prover",
+    title: "Bancolombia Prover",
     isConnected,
     isPending: isRequestPending,
     error: error ?? void 0,
@@ -600,4 +570,4 @@ var index_default = {
 export {
   index_default as default
 };
-//# sourceMappingURL=ts-plugin-sample.js.map
+//# sourceMappingURL=ts-plugin-bancolombia.js.map

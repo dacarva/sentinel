@@ -53,6 +53,36 @@ function buildTransactionsSummary(results: ProofResultItem[]): TransactionSummar
 }
 
 /**
+ * Convert a Bancolombia JS plugin presentation to DisclosedData.
+ * Expects results with params.path matching the consolidated-balance response structure.
+ */
+export function disclosedDataFromBancolombiaPresentation(presentation: JsPresentation): DisclosedData {
+  const results = presentation.results ?? [];
+  const balanceStr = findResultByPath(results, 'data.accounts.0.balances.available');
+  const currencyStr = findResultByPath(results, 'data.accounts.0.currency');
+  const accountNumberStr = findResultByPath(results, 'data.accounts.0.number');
+
+  if (balanceStr === undefined || balanceStr === '')
+    throw new Error('bancolombia presentation missing balance');
+  if (currencyStr === undefined || currencyStr === '')
+    throw new Error('bancolombia presentation missing currency');
+
+  const balance = Number(balanceStr);
+  if (Number.isNaN(balance)) throw new Error('invalid balance in bancolombia presentation');
+
+  const account_id_hash = accountNumberStr
+    ? createHash('sha256').update(accountNumberStr).digest('hex')
+    : createHash('sha256').update('').digest('hex');
+
+  return {
+    balance,
+    currency: String(currencyStr).trim(),
+    account_id_hash,
+    transactions_summary: { months: [] },
+  };
+}
+
+/**
  * Convert JS plugin presentation (results array) to DisclosedData.
  * Expects at least results with params.path 'balance' and 'currency'.
  * account_id is optional; if present it is hashed for account_id_hash.

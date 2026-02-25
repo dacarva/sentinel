@@ -3,9 +3,16 @@ import { useConnection } from 'wagmi'
 import './Attest.css'
 
 const SENTINEL_API = import.meta.env.VITE_SENTINEL_API ?? 'http://localhost:3000'
-const PLUGIN_URL =
-  import.meta.env.VITE_TLSN_PLUGIN_URL ??
-  '/ts-plugin-sample.js'
+
+const PLUGIN_URLS: Record<string, string> = {
+  'mock-bank': import.meta.env.VITE_TLSN_PLUGIN_URL ?? '/ts-plugin-sample.js',
+  'bancolombia': import.meta.env.VITE_TLSN_PLUGIN_BANCOLOMBIA_URL ?? '/ts-plugin-bancolombia.js',
+}
+
+const PLUGIN_LABELS: Record<string, string> = {
+  'mock-bank': 'Mock Bank',
+  'bancolombia': 'Bancolombia',
+}
 
 /** Resolve plugin URL to absolute for fetch (same-origin or full URL). */
 function resolvePluginUrl(relativeOrAbsolute: string): string {
@@ -30,9 +37,10 @@ interface AttestResult {
   message?: string
 }
 
-/** Plugin returns string from done(JSON.stringify(resp)); resp has { results }. */
+/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank }. */
 interface PluginProof {
   results?: Array<{ type?: string; part?: string; action?: string; params?: unknown; value?: string }>;
+  bank?: string;
 }
 
 export function Attest() {
@@ -40,6 +48,7 @@ export function Attest() {
   const [userAddress, setUserAddress] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [selectedPlugin, setSelectedPlugin] = useState<string>('mock-bank')
   const [status, setStatus] = useState<AttestStatus>('idle')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<AttestResult | null>(null)
@@ -73,7 +82,7 @@ export function Attest() {
 
     setStatus('connecting')
     try {
-      const pluginUrl = resolvePluginUrl(PLUGIN_URL)
+      const pluginUrl = resolvePluginUrl(PLUGIN_URLS[selectedPlugin] ?? PLUGIN_URLS['mock-bank'])
       const code = await fetch(pluginUrl).then((r) => {
         if (!r.ok) throw new Error(`Plugin fetch failed: ${r.status} ${r.statusText}`)
         return r.text()
@@ -82,7 +91,7 @@ export function Attest() {
       if (trimmed.startsWith('<!') || trimmed.startsWith('<html')) {
         setStatus('error')
         setMessage(
-          'Plugin URL returned HTML instead of JavaScript. Set VITE_TLSN_PLUGIN_URL to /ts-plugin-sample.js in app/.env (or remove it to use the default), then run "bun run plugin:build" from the repo root so app/public/ts-plugin-sample.js exists.'
+          'Plugin URL returned HTML instead of JavaScript. Run "bun run plugin:build" (Mock Bank) or "cd plugin-bancolombia && bun run build" (Bancolombia) and copy the output to app/public/.'
         )
         return
       }
@@ -128,7 +137,8 @@ export function Attest() {
 
 
       setStatus('submitting')
-      const presentation = { results: proof.results }
+      const presentation: { results: PluginProof['results']; bank?: string } = { results: proof.results }
+      if (proof.bank) presentation.bank = proof.bank
       const res = await fetch(`${SENTINEL_API}/attest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -165,6 +175,18 @@ export function Attest() {
       </p>
 
       <div className="attest-form">
+        <label>
+          Bank plugin
+          <select
+            value={selectedPlugin}
+            onChange={(e) => setSelectedPlugin(e.target.value)}
+            disabled={status === 'connecting' || status === 'proving' || status === 'submitting'}
+          >
+            {Object.entries(PLUGIN_LABELS).map(([key, label]) => (
+              <option key={key} value={key}>{label}</option>
+            ))}
+          </select>
+        </label>
         <label>
           Wallet address (0x + 40 hex)
           <input
@@ -224,7 +246,7 @@ export function Attest() {
       )}
 
       <p className="attest-hint">
-        Backend: <code>{SENTINEL_API}</code> · Plugin: <code>{PLUGIN_URL}</code>
+        Backend: <code>{SENTINEL_API}</code> · Plugin: <code>{PLUGIN_URLS[selectedPlugin]}</code>
       </p>
     </div>
   )

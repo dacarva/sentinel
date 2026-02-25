@@ -48,6 +48,8 @@ export interface ProofResultItem {
 /** Presentation format from app when using execCode + prove() results (JS plugin). */
 export interface JsPresentation {
   results: ProofResultItem[];
+  /** Optional bank identifier set by the plugin (e.g. 'bancolombia'). */
+  bank?: string;
 }
 
 export interface NotaryKeyPair {

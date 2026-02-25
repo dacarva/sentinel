@@ -75,6 +75,18 @@
         "typescript": "^5.5.4",
       },
     },
+    "plugin-bancolombia": {
+      "name": "@tlsn/ts-plugin-bancolombia",
+      "version": "0.1.0",
+      "dependencies": {
+        "@tlsn/plugin-sdk": "*",
+      },
+      "devDependencies": {
+        "dotenv": "^17.3.1",
+        "esbuild": "^0.24.2",
+        "typescript": "^5.5.4",
+      },
+    },
     "plugin-sdk": {
       "name": "@tlsn/plugin-sdk",
       "version": "0.1.0",
@@ -425,6 +437,8 @@
     "@tlsn/common": ["@tlsn/common@workspace:tlsn-common"],
 
     "@tlsn/plugin-sdk": ["@tlsn/plugin-sdk@workspace:plugin-sdk"],
+
+    "@tlsn/ts-plugin-bancolombia": ["@tlsn/ts-plugin-bancolombia@workspace:plugin-bancolombia"],
 
     "@tlsn/ts-plugin-sample": ["@tlsn/ts-plugin-sample@workspace:plugin"],
 

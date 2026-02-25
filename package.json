@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "workspaces": ["mock-bank","app","backend","plugin-sdk", "tlsn-common", "plugin"],
+  "workspaces": ["mock-bank","app","backend","plugin-sdk", "tlsn-common", "plugin", "plugin-bancolombia"],
   "scripts": {
     "bank:start": "bun run --filter mock-bank start",
     "app:dev": "bun run --filter app dev",
