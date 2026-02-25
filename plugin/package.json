@@ -27,6 +27,7 @@
     "@tlsn/plugin-sdk": "*"
   },
   "devDependencies": {
+    "dotenv": "^17.3.1",
     "esbuild": "^0.24.2",
     "typescript": "^5.5.4"
   }

@@ -4,11 +4,14 @@
  *
  * Output filename is derived from the package.json "name" field
  * (scope stripped if present). Pass --watch for dev mode.
+ * Loads .env from the plugin directory so VERIFIER_URL, PROXY_URL, MOCK_BANK_URL are injected at build time.
  */
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const pkg = require('./package.json');
+
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 // Derive output filename from package name, stripping @scope/ if present
 const pluginName = pkg.name.replace(/^@[^/]+\//, '');
