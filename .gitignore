@@ -34,8 +34,11 @@ Thumbs.db
 .cache/
 mock-bank/certs/
 
-# Backend attestation storage (runtime data)
+# Backend runtime data (LOCAL DEVELOPMENT ONLY)
+# ⚠️  For production, use PostgreSQL or other persistent storage
+# See: docs/PRODUCTION_DEPLOYMENT.md
 backend/data/
+data/attestations/
 
 # Built TLSNotary plugin (generate with: bun run plugin:build)
 app/public/mock-bank-plugin.wasm
@@ -44,5 +47,11 @@ app/public/mock-bank-plugin.wasm
 binaryen/
 binaryen*
 
+# Database & migrations (SHOULD be committed for production)
+!database/
+!database/schema.sql
+!database/migrations/
+
+# Test certificates & keys (SHOULD be committed for local dev)
 !mock-bank/certs/generate.sh
 !mock-bank/certs/notary-key.ts

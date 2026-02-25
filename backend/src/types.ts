@@ -64,6 +64,7 @@ export interface Attestation {
     public_key: string;
   };
   disclosed_data: DisclosedData;
+  proof_origin?: ProofOrigin;
   status: "pending" | "verified" | "failed";
   errors?: string[];
 }
@@ -106,4 +107,11 @@ export interface TlsnWebhookPayload {
     sent_length: number;
     recv_length: number;
   };
+}
+
+/** Cryptographic binding from attestation to the originating TLS session. */
+export interface ProofOrigin {
+  server_name: string;      // e.g. "sentinel-d75o.onrender.com"
+  session_id: string;       // TLSNotary session.id from webhook payload
+  transcript_hash: string;  // SHA-256 of canonical transcript descriptor
 }

@@ -72,4 +72,42 @@ describe("signature verifier", () => {
     attestation.disclosed_data.balance = 9999; // tamper
     expect(verifySignature(attestation, pubKeyHex)).toBe(false);
   });
+
+  test("attestation with proof_origin — signature covers TLS binding", () => {
+    const keyPair = ec.genKeyPair();
+    const pubKeyHex = keyPair.getPublic(true, "hex");
+
+    const attestation: Attestation = {
+      id: "test-id-with-tls",
+      user_address: "0x1111111111111111111111111111111111111111",
+      timestamp: new Date().toISOString(),
+      notary: { signature: "", public_key: pubKeyHex },
+      disclosed_data: {
+        balance: 2000,
+        currency: "USD",
+        account_id_hash: "h",
+        transactions_summary: { months: [] },
+      },
+      proof_origin: {
+        server_name: "test.com",
+        session_id: "sess-123",
+        transcript_hash: "a".repeat(64),
+      },
+      status: "pending",
+    };
+    const payload = buildPayload(attestation);
+    const msgHash = hashPayload(payload);
+    const sig = keyPair.sign(msgHash);
+    const sigHex =
+      sig.r.toString(16, 64).padStart(64, "0") +
+      sig.s.toString(16, 64).padStart(64, "0");
+    attestation.notary.signature = sigHex;
+
+    // Signature should verify with proof_origin present
+    expect(verifySignature(attestation, pubKeyHex)).toBe(true);
+
+    // Tampering proof_origin should fail verification
+    attestation.proof_origin.server_name = "evil.com";
+    expect(verifySignature(attestation, pubKeyHex)).toBe(false);
+  });
 });

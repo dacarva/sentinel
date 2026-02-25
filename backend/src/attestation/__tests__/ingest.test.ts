@@ -5,8 +5,8 @@ import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdtempSync, rmSync } from "fs";
 import { join } from "path";
 import { tmpdir } from "os";
-import type { DisclosedData } from "../../types.js";
-import { ingest, ingestFromJsPresentation } from "../ingest.js";
+import type { DisclosedData, TlsnWebhookPayload } from "../../types.js";
+import { ingest, ingestFromJsPresentation, buildProofOrigin } from "../ingest.js";
 
 let dataDir: string;
 
@@ -88,5 +88,54 @@ describe("ingestFromJsPresentation", () => {
     await expect(
       ingestFromJsPresentation(presentation, "0x1111111111111111111111111111111111111111")
     ).rejects.toThrow("balance");
+  });
+
+  test("ingestFromJsPresentation with webhook → proof_origin populated", async () => {
+    const presentation = {
+      results: [
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "balance" }, value: "25000" },
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "currency" }, value: "USD" },
+        { type: "RECV", part: "BODY", action: "REVEAL", params: { type: "json", path: "account_id" }, value: "acc-1" },
+      ],
+    };
+    const webhook: TlsnWebhookPayload = {
+      server_name: "bank.example.com",
+      results: [],
+      session: { id: "sess-abc123" },
+      transcript: {
+        sent: [1, 2, 3],
+        recv: [4, 5, 6],
+        sent_length: 3,
+        recv_length: 3,
+      },
+    };
+    const att = await ingestFromJsPresentation(
+      presentation,
+      "0x1111111111111111111111111111111111111111",
+      webhook
+    );
+    expect(att.proof_origin).toBeDefined();
+    expect(att.proof_origin?.server_name).toBe("bank.example.com");
+    expect(att.proof_origin?.session_id).toBe("sess-abc123");
+    expect(att.proof_origin?.transcript_hash).toBeDefined();
+    expect(att.proof_origin?.transcript_hash).toMatch(/^[a-f0-9]{64}$/);
+  });
+
+  test("buildProofOrigin generates correct transcript_hash", () => {
+    const webhook: TlsnWebhookPayload = {
+      server_name: "test.com",
+      results: [],
+      session: { id: "session-xyz" },
+      transcript: {
+        sent: [65, 66, 67], // "ABC"
+        recv: [68, 69, 70], // "DEF"
+        sent_length: 3,
+        recv_length: 3,
+      },
+    };
+    const origin = buildProofOrigin(webhook);
+    expect(origin.server_name).toBe("test.com");
+    expect(origin.session_id).toBe("session-xyz");
+    expect(origin.transcript_hash).toMatch(/^[a-f0-9]{64}$/); // SHA256 hex
   });
 });

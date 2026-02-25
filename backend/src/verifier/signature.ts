@@ -10,12 +10,16 @@ const ec = new EC.ec("secp256k1");
 
 /** Canonical payload that was signed (must match prover/notary side). */
 export function buildPayload(att: Attestation): string {
-  return JSON.stringify({
+  const base: Record<string, unknown> = {
     id: att.id,
     user_address: att.user_address,
     timestamp: att.timestamp,
     disclosed_data: att.disclosed_data,
-  });
+  };
+  if (att.proof_origin !== undefined) {
+    base.proof_origin = att.proof_origin;
+  }
+  return JSON.stringify(base);
 }
 
 function hashPayload(payload: string): Buffer {

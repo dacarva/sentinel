@@ -2,7 +2,7 @@
  * Ingest — IMPLEMENTATION.md §3.3.
  * Accept presentation + user_address; verify via adapter; build attestation; bind; save.
  */
-import type { Attestation, DisclosedData, JsPresentation } from "../types.js";
+import type { Attestation, DisclosedData, JsPresentation, TlsnWebhookPayload, ProofOrigin } from "../types.js";
 import { getNotaryPubKey, getNotaryPrivKey } from "../config.js";
 import { buildPayload } from "../verifier/signature.js";
 import { verifyPresentation } from "./verifier-adapter.js";
@@ -42,8 +42,28 @@ function buildAttestation(disclosed_data: DisclosedData, user_address: string): 
     status: "pending",
   };
   bindUserAddress(att, user_address);
-  att.notary.signature = signPayload(att, getNotaryPrivKey());
+  att.notary.signature = "";
   return att;
+}
+
+/**
+ * Build ProofOrigin from TLSNotary webhook payload.
+ * Computes transcript_hash from the canonical transcript descriptor.
+ */
+export function buildProofOrigin(webhook: TlsnWebhookPayload): ProofOrigin {
+  const recvBuf = Buffer.from(webhook.transcript.recv);
+  const recvSha256 = createHash("sha256").update(recvBuf).digest("hex");
+  const descriptor = JSON.stringify({
+    sent_length: webhook.transcript.sent_length,
+    recv_length: webhook.transcript.recv_length,
+    recv_sha256: recvSha256,
+  });
+  const transcript_hash = createHash("sha256").update(descriptor, "utf8").digest("hex");
+  return {
+    server_name: webhook.server_name,
+    session_id: webhook.session.id,
+    transcript_hash,
+  };
 }
 
 export async function ingest(
@@ -58,6 +78,7 @@ export async function ingest(
     disclosed_data = await verifyPresentation(presentation);
   }
   const att = buildAttestation(disclosed_data, user_address);
+  att.notary.signature = signPayload(att, getNotaryPrivKey());
   await saveAttestation(att);
   return att;
 }
@@ -65,13 +86,19 @@ export async function ingest(
 /**
  * Ingest from JS plugin presentation (prove() results).
  * Maps results to DisclosedData and saves attestation.
+ * Optionally binds webhook payload to create proof_origin.
  */
 export async function ingestFromJsPresentation(
   presentation: JsPresentation,
-  user_address: string
+  user_address: string,
+  webhook?: TlsnWebhookPayload
 ): Promise<Attestation> {
   const disclosed_data = disclosedDataFromJsPresentation(presentation);
   const att = buildAttestation(disclosed_data, user_address);
+  if (webhook) {
+    att.proof_origin = buildProofOrigin(webhook);
+  }
+  att.notary.signature = signPayload(att, getNotaryPrivKey());
   await saveAttestation(att);
   return att;
 }

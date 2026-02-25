@@ -23,6 +23,7 @@ Sentinel is a cryptographic attestation system that enables users to prove their
 - **Sentinel Backend**: REST API for receiving proofs, verifying signatures, checking balances
 - **Web App**: Frontend for wallet connection and proof submission
 - **TLSNotary Integration**: Connects local verifier, browser extension, and backend via webhooks
+- **Storage**: Filesystem (dev) → PostgreSQL (production) with audit logging
 
 ---
 
@@ -245,8 +246,39 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 
 - **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Detailed webhook architecture and setup
 - **[MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Manual test cases and troubleshooting
+- **[PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — Production deployment with PostgreSQL, backups, and compliance
 - **[plans/notary-features.md](docs/plans/notary-features.md)** — Notary architecture & audit workflow
 - **[plan/zktls/IMPLEMENTATION.md](docs/plan/zktls/IMPLEMENTATION.md)** — Low-level implementation details
+
+---
+
+## Production Deployment
+
+### Storage Architecture
+
+**Development**: Filesystem-based (`data/attestations/`)
+
+**Production**: Requires persistent storage with audit logging:
+- **Primary**: PostgreSQL with webhook audit table
+- **Backup**: Daily automated backups to S3
+- **Retention**: 1-year webhook logs, 7-year audit trail
+- **Optional**: Immutable append-only log for enhanced auditability
+
+⚠️ **Important**: The current filesystem storage is for development only. See [PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) for complete production setup including:
+- PostgreSQL schema and migrations
+- Backup & disaster recovery strategy
+- Compliance and data retention policies
+- Audit logging for webhook verification
+
+### Deployment Checklist
+- [ ] Setup PostgreSQL with provided schema
+- [ ] Configure backups (daily to S3)
+- [ ] Set environment variables for production
+- [ ] Deploy with HTTPS and valid certificates
+- [ ] Enable webhook signature verification (HMAC)
+- [ ] Setup monitoring and alerting
+- [ ] Document RTO/RPO targets
+- [ ] Configure log retention per compliance requirements
 
 ---
 

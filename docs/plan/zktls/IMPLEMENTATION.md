@@ -45,8 +45,9 @@ All endpoints communicate via `application/json`. Errors follow the standard for
 ### Sentinel Attestation API
 | Endpoint | Method | Auth | Description |
 | :--- | :--- | :--- | :--- |
-| `/webhook/tlsn` | POST | X-TLSN-Secret header | Receives MPC-TLS proof webhook from local TLSNotary verifier. |
-| `/attest` | POST | None | Initiates TLSNotary session and generates attestation. |
+| `/notary/pubkey` | GET | None | Public key endpoint for third-party attestation verification. |
+| `/webhook/tlsn` | POST | X-TLSN-Secret or X-TLSN-Signature header | Receives MPC-TLS proof webhook from local TLSNotary verifier (HMAC or legacy auth). |
+| `/attest` | POST | None | Initiates TLSNotary session and generates attestation. When `REQUIRE_WEBHOOK=true`, includes `proof_origin` binding to TLS session. |
 | `/attest/:id` | GET | None | Retrieves stored attestation status and data. |
 | `/verify/:id` | POST | None | Runs backend verification (sig, balance, consistency). |
 
@@ -107,6 +108,7 @@ export interface Attestation {
     public_key: string;
   };
   disclosed_data: DisclosedData;
+  proof_origin?: ProofOrigin;
   status: 'pending' | 'verified' | 'failed';
   error?: string;
 }
@@ -142,6 +144,12 @@ export interface TlsnWebhookPayload {
   results: TlsnHandlerResult[];
   session: { id: string };
   transcript: { sent: number[]; recv: number[]; sent_length: number; recv_length: number };
+}
+
+export interface ProofOrigin {
+  server_name: string;      // TLS server from webhook
+  session_id: string;       // TLSNotary session.id for audit trail
+  transcript_hash: string;  // SHA-256 of canonical transcript descriptor
 }
 ```
 

@@ -382,6 +382,40 @@ curl -X POST http://localhost:3000/attest \
 REQUIRE_WEBHOOK=false bun test
 ```
 
+### 6.5 Test: Webhook with HMAC signature (production method)
+
+```bash
+# Compute HMAC
+TIMESTAMP=$(date +%s)
+BODY='{"server_name":"sentinel-d75o.onrender.com","results":[],"session":{"id":"test"},"transcript":{"sent":[],"recv":[],"sent_length":0,"recv_length":0}}'
+SIGNATURE=$(printf "$TIMESTAMP.$BODY" | openssl dgst -sha256 -hmac "dev-local-secret" -hex | cut -d' ' -f2)
+
+curl -X POST http://localhost:3000/webhook/tlsn \
+  -H "Content-Type: application/json" \
+  -H "X-TLSN-Signature: $SIGNATURE" \
+  -H "X-TLSN-Timestamp: $TIMESTAMP" \
+  -d "$BODY"
+```
+
+**Expected:** `200 { "ok": true }`
+
+### 6.6 Test: Webhook with expired timestamp (replay protection)
+
+```bash
+# Use timestamp from 7 minutes ago
+TIMESTAMP=$(($(date +%s) - 7*60))
+BODY='{"server_name":"test.com","results":[],"session":{"id":"test"},"transcript":{"sent":[],"recv":[],"sent_length":0,"recv_length":0}}'
+SIGNATURE=$(printf "$TIMESTAMP.$BODY" | openssl dgst -sha256 -hmac "dev-local-secret" -hex | cut -d' ' -f2)
+
+curl -X POST http://localhost:3000/webhook/tlsn \
+  -H "Content-Type: application/json" \
+  -H "X-TLSN-Signature: $SIGNATURE" \
+  -H "X-TLSN-Timestamp: $TIMESTAMP" \
+  -d "$BODY"
+```
+
+**Expected:** `401 UNAUTHORIZED` with `reason: "timestamp out of window"`
+
 ---
 
 ## 7. End-to-End Checklist
@@ -400,6 +434,8 @@ Use this order for a full manual pass:
 | 8 | Start app; open Attest in browser | Form loads |
 | 9 | Invalid user_address in UI | Error message |
 | 10 | Valid address + Prove (with or without extension/plugin) | Success or clear error |
+| 11 | GET /notary/pubkey (curl) | 200 + public_key, algorithm, encoding |
+| 12 | Verify attestation signature with pubkey | Signature matches public key |
 
 ---
 

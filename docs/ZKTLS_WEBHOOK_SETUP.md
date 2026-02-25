@@ -47,11 +47,22 @@ Create or edit `tlsn-extension/packages/verifier/config.yaml`:
 webhooks:
   "sentinel-d75o.onrender.com":
     url: "http://localhost:3000/webhook/tlsn"
+    hmac_secret: "dev-local-secret"    # For HMAC signing (production)
+    use_hmac: true                     # Enable HMAC headers
+```
+
+The key (`"sentinel-d75o.onrender.com"`) is the hostname the verifier witnesses during TLS. When `use_hmac: true`, the verifier will sign the POST with `X-TLSN-Signature` and `X-TLSN-Timestamp` headers using the shared secret.
+
+**Legacy Mode**: For local dev without HMAC support, use header-based auth:
+```yaml
+webhooks:
+  "sentinel-d75o.onrender.com":
+    url: "http://localhost:3000/webhook/tlsn"
     headers:
       X-TLSN-Secret: "dev-local-secret"
 ```
 
-The key (`"sentinel-d75o.onrender.com"`) is the hostname the verifier witnesses during TLS. The verifier will POST to the `url` with the `headers` attached when that hostname is encountered.
+Both modes are supported by Sentinel backend (HMAC takes precedence if both headers present).
 
 ### 3. Install TLSNotary Extension
 
@@ -66,9 +77,10 @@ The verifier binary includes a built-in WebSocket proxy at `/proxy`, so no separ
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `TLSN_WEBHOOK_SECRET` | `dev-local-secret` | Shared secret for X-TLSN-Secret header validation on `/webhook/tlsn` |
+| `TLSN_WEBHOOK_SECRET` | `dev-local-secret` | Shared secret for HMAC/X-TLSN-Secret validation on `/webhook/tlsn` |
+| `NOTARY_PRIV_KEY` | (dev default) | secp256k1 private key (64-char hex) for signing attestations (KEEP SECRET in production) |
+| `NOTARY_PUB_KEY` | (derived) | Public key; auto-derived from private key if unset |
 | `REQUIRE_WEBHOOK` | `true` | Set to `false` to disable webhook verification (useful for unit tests) |
-| `NOTARY_PRIV_KEY` | (dev default) | secp256k1 private key for signing attestations |
 | `PORT` | `3000` | Backend port |
 | `DATA_DIR` | `data` | Directory for storing attestations |
 
@@ -167,7 +179,24 @@ curl -X POST http://localhost:3000/webhook/tlsn \
 # Expected: 401 UNAUTHORIZED
 ```
 
-### Test 2: Webhook with correct secret (should be accepted)
+### Test 2a: Webhook with HMAC signature (production)
+
+```bash
+# Compute HMAC (replace body and timestamp as needed)
+TIMESTAMP=$(date +%s)
+BODY='{"server_name":"sentinel-d75o.onrender.com","results":[],"session":{"id":"test-session"},"transcript":{"sent":[],"recv":[],"sent_length":0,"recv_length":0}}'
+SIGNATURE=$(printf "$TIMESTAMP.$BODY" | openssl dgst -sha256 -hmac "dev-local-secret" -hex | cut -d' ' -f2)
+
+curl -X POST http://localhost:3000/webhook/tlsn \
+  -H "Content-Type: application/json" \
+  -H "X-TLSN-Signature: $SIGNATURE" \
+  -H "X-TLSN-Timestamp: $TIMESTAMP" \
+  -d "$BODY"
+
+# Expected: 200 { "ok": true }
+```
+
+### Test 2b: Webhook with legacy X-TLSN-Secret header
 
 ```bash
 curl -X POST http://localhost:3000/webhook/tlsn \
@@ -175,15 +204,7 @@ curl -X POST http://localhost:3000/webhook/tlsn \
   -H "X-TLSN-Secret: dev-local-secret" \
   -d '{
     "server_name": "sentinel-d75o.onrender.com",
-    "results": [
-      {
-        "type": "RECV",
-        "part": "BODY",
-        "action": "REVEAL",
-        "params": {"type": "json", "path": "balance"},
-        "value": "25000"
-      }
-    ],
+    "results": [],
     "session": {"id": "test-session"},
     "transcript": {"sent": [], "recv": [], "sent_length": 0, "recv_length": 0}
   }'
@@ -222,6 +243,42 @@ REQUIRE_WEBHOOK=false bun test
 ```
 
 This runs the full test suite without requiring webhook verification.
+
+## Attestation Contents
+
+When webhooks are enabled (`REQUIRE_WEBHOOK=true`), each attestation includes a `proof_origin` field binding the attestation to the TLS session:
+
+```json
+{
+  "id": "att-12345",
+  "user_address": "0x1111111111111111111111111111111111111111",
+  "timestamp": "2026-02-25T10:30:00.000Z",
+  "notary": {
+    "public_key": "02abc123...",
+    "signature": "c47e5767..."
+  },
+  "disclosed_data": {
+    "balance": 25000,
+    "currency": "USD",
+    "account_id_hash": "h",
+    "transactions_summary": { "months": [] }
+  },
+  "proof_origin": {
+    "server_name": "sentinel-d75o.onrender.com",
+    "session_id": "tlsn-sess-xyz",
+    "transcript_hash": "a1b2c3d4e5f6..."
+  },
+  "status": "verified"
+}
+```
+
+**Key fields**:
+- `proof_origin.server_name`: The TLS server witnessed by the verifier
+- `proof_origin.session_id`: Links to webhook's `session.id` for audit trail
+- `proof_origin.transcript_hash`: SHA-256 digest of the transcript descriptor (prevents replaying transcripts from different sessions)
+- `notary.signature`: ECDSA secp256k1 signature covering all fields including `proof_origin`
+
+For attestations created without webhook data, `proof_origin` is omitted and signature covers only the 4 base fields.
 
 ## End-to-End Manual Test
 

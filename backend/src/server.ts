@@ -7,25 +7,54 @@ import { ingest, ingestFromJsPresentation } from "./attestation/ingest.js";
 import { loadAttestation, saveAttestation } from "./attestation/storage.js";
 import { verify } from "./verifier/index.js";
 import { storeWebhook, lookupWebhook } from "./attestation/webhook-store.js";
-import { getTlsnWebhookSecret, requireWebhookVerification } from "./config.js";
+import { getTlsnWebhookSecret, requireWebhookVerification, getNotaryPubKey } from "./config.js";
+import { verifyWebhookHmac } from "./attestation/webhook-hmac.js";
 import type { DisclosedData, JsPresentation, TlsnWebhookPayload, TlsnHandlerResult } from "./types.js";
 
 const app = express();
-app.use(express.json({ limit: "10mb" }));
+
+// Custom middleware to store raw body for HMAC validation
+app.use(express.json({ limit: "10mb", verify: (req: any, _res, buf) => {
+  req.rawBody = buf.toString("utf8");
+} }));
+
 app.use((_req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-TLSN-Secret");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, X-TLSN-Secret, X-TLSN-Signature, X-TLSN-Timestamp"
+  );
   next();
 });
 
-app.post("/webhook/tlsn", (req, res) => {
-  const secret = req.headers["x-tlsn-secret"];
-  if (secret !== getTlsnWebhookSecret()) {
-    res.status(401).json({ error: "UNAUTHORIZED" });
-    return;
-  }
+app.get("/notary/pubkey", (_req, res) => {
+  res.json({
+    public_key: getNotaryPubKey(),
+    algorithm: "secp256k1",
+    encoding: "compressed-hex",
+  });
+});
+
+app.post("/webhook/tlsn", (req: any, res) => {
   const payload = req.body as TlsnWebhookPayload;
+  const signature = req.headers["x-tlsn-signature"] as string | undefined;
+  const timestamp = req.headers["x-tlsn-timestamp"] as string | undefined;
+  const bodyString = req.rawBody || "";
+
+  if (signature && timestamp) {
+    const result = verifyWebhookHmac(getTlsnWebhookSecret(), signature, timestamp, bodyString);
+    if (!result.ok) {
+      res.status(401).json({ error: "UNAUTHORIZED", reason: result.reason });
+      return;
+    }
+  } else {
+    if (req.headers["x-tlsn-secret"] !== getTlsnWebhookSecret()) {
+      res.status(401).json({ error: "UNAUTHORIZED" });
+      return;
+    }
+  }
+
   if (!payload?.results || !payload?.server_name) {
     res.status(400).json({ error: "BAD_REQUEST", message: "Invalid webhook payload" });
     return;
@@ -60,21 +89,23 @@ app.post("/attest", async (req, res) => {
       presentation !== null &&
       Array.isArray((presentation as JsPresentation).results);
     if (isJsPresentation) {
-      // NEW: require webhook verification for real proofs
+      let webhook: TlsnWebhookPayload | undefined;
       if (requireWebhookVerification()) {
         const jsPres = presentation as JsPresentation;
-        const webhook = lookupWebhook(jsPres.results as TlsnHandlerResult[]);
-        if (!webhook) {
+        const found = lookupWebhook(jsPres.results as TlsnHandlerResult[]);
+        if (!found) {
           res.status(422).json({
             error: "WEBHOOK_REQUIRED",
             message: "No verifier webhook received for this proof. Ensure the TLSNotary verifier is running and configured to POST to this backend.",
           });
           return;
         }
+        webhook = found;
       }
       const att = await ingestFromJsPresentation(
         presentation as JsPresentation,
-        user_address
+        user_address,
+        webhook
       );
       res.status(201).json({
         attestation_id: att.id,
