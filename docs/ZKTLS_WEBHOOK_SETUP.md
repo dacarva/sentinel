@@ -128,24 +128,31 @@ VITE v5.x.x  ready in xxx ms
 
 ## How Webhook Matching Works
 
-1. **prove() call #1** in plugin:
-   - Browser extension calls `prove()` for `/account/balance`
-   - Verifier performs MPC-TLS, witnesses `server_name: "sentinel-d75o.onrender.com"`
-   - Verifier POSTs webhook #1 with balance/currency/account_id results
+### Bancolombia plugin (current)
 
-2. **prove() call #2** in plugin:
-   - Plugin calls `prove()` for `/account/transactions`
-   - Verifier performs another MPC-TLS session, witnesses same `server_name`
-   - Verifier POSTs webhook #2 with transactions results
+1. **Single prove() call**:
+   - Browser extension calls `prove()` for `GET /consolidated-balance`
+   - Verifier performs MPC-TLS, witnesses `server_name: "canalpersonas-ext.apps.bancolombia.com"`
+   - Full RECV BODY is revealed; plugin parses it client-side to compute threshold claim
+   - Verifier POSTs one webhook with the revealed results
 
-3. **Client submits merged proof**:
-   - Plugin merges results: `[...balanceResults, ...txResults]`
-   - App POSTs `/attest` with merged `presentation.results[]`
+2. **Client submits presentation**:
+   - Plugin calls `done(JSON.stringify({ results, bank: 'bancolombia', mockZkp: { balanceAboveThreshold, threshold, currency } }))`
+   - App POSTs `/attest` with the full presentation including `mockZkp`
 
-4. **Backend validates**:
-   - Backend uses subset matching: finds any stored webhook whose results are **fully contained** in the client's merged array
-   - If match found → webhook is valid, proceed with attestation
-   - If no match → reject with `422 WEBHOOK_REQUIRED`
+3. **Backend validates**:
+   - Backend finds stored webhook whose results are **fully contained** in the client's array
+   - If `mockZkp` is present, extracts `DisclosedData` from it (balance = threshold when above, 0 otherwise)
+   - Creates and signs attestation; returns `attestation_id`
+
+> **Note**: The `mockZkp` path trusts the client to compute the threshold correctly. Selective disclosure (v2) will replace this — see [SELECTIVE_DISCLOSURE.md](SELECTIVE_DISCLOSURE.md).
+
+### Mock-bank plugin (reference)
+
+1. **prove() call #1**: `GET /account/balance` → webhook with balance/currency/account_id results
+2. **prove() call #2**: `GET /account/transactions` → webhook with transaction results
+3. **Client submits merged proof**: `[...balanceResults, ...txResults]`
+4. **Backend**: subset-matches either webhook; proceeds with attestation
 
 ## Health Checks
 
@@ -286,22 +293,22 @@ For attestations created without webhook data, `proof_origin` is omitted and sig
 
 All three services running as described in "Local Startup Sequence".
 
-### Flow
+### Flow (Bancolombia)
 
 1. **Browser**: Open http://localhost:5173
-2. **UI**: Enter wallet address (any valid 0x... format)
-3. **Click**: "Prove with TLSNotary"
-4. **Extension**: Opens https://sentinel-d75o.onrender.com in new window
-5. **Login**: Use credentials `user_pass` / `sentinel123`
-6. **Prove**: Click "Prove" in the extension overlay
-7. **Wait**: Both prove() calls complete (balance + transactions)
-8. **Backend logs**: Should show two webhooks received:
+2. **Plugin selector**: Choose "Bancolombia"
+3. **UI**: Enter wallet address (any valid 0x... format)
+4. **Click**: "Prove with TLSNotary"
+5. **Extension**: Opens `https://svpersonas.apps.bancolombia.com` in a new window
+6. **Login**: Log in to Bancolombia Sucursal Virtual as normal
+7. **Wait**: Plugin overlay appears once the Bearer token is captured (connection indicator turns green)
+8. **Click "Prove"** in the plugin overlay
+9. **Backend logs**: Should show one webhook received:
    ```
-   Webhook received: server_name=sentinel-d75o.onrender.com, results=[5 items]
-   Webhook received: server_name=sentinel-d75o.onrender.com, results=[3 items]
+   Webhook received: server_name=canalpersonas-ext.apps.bancolombia.com, results=[3 items]
    ```
-9. **App UI**: Shows attestation_id in success state
-10. **Verify**:
+10. **App UI**: Shows green banner — e.g. **CARVAJAL** (2030\*\*\*\*\*\*\*) has more than 1,000,000 COP — and `attestation_id` in success state
+11. **Verify**:
     ```bash
     curl -X POST http://localhost:3000/verify/<attestation_id> \
       -H "Content-Type: application/json" \
@@ -309,6 +316,17 @@ All three services running as described in "Local Startup Sequence".
 
     # Expected: { "isValid": true, "errors": [] }
     ```
+
+### Flow (Mock Bank — reference)
+
+1. **Plugin selector**: Choose "Mock Bank"
+2. **Click**: "Prove with TLSNotary"
+3. **Extension**: Opens https://sentinel-d75o.onrender.com in new window
+4. **Login**: Use credentials `user_pass` / `sentinel123`
+5. **Click "Prove"** in the extension overlay
+6. **Wait**: Both prove() calls complete (balance + transactions)
+7. **Backend logs**: Two webhooks received
+8. **App UI**: Shows `attestation_id` in success state
 
 ## Troubleshooting
 

@@ -10,7 +10,8 @@ Sentinel is a cryptographic attestation system that enables users to prove their
 ### 🔐 Zero-Knowledge Proofs of Banking Data
 - Prove balance and transaction history without sharing login credentials
 - Uses MPC-TLS to witness encrypted TLS handshakes between browser and bank
-- Selective disclosure — reveal only balance, hide PII and raw transactions
+- **Mock ZKP (current)**: threshold claim computed client-side (`balance > 1,000,000 COP`) — exact balance never sent to backend
+- **Selective disclosure (next release)**: TLSNotary path-level REVEAL so the backend receives only the specific JSON fields it needs, with no client-side trust assumption — see [SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)
 
 ### 🌍 Production-Ready Auditability
 - **Proof Origin Binding**: Attestations cryptographically bind to their originating TLS session
@@ -95,7 +96,8 @@ Signed Attestation returned to App
 | `mock-bank/` | HTTPS server with auth & account endpoints | 3443 |
 | `backend/` | Attestation REST API + verification logic | 3000 |
 | `app/` | Frontend for wallet + proof flow | 5173 |
-| `plugin/` | TLSNotary plugin for selective disclosure | N/A |
+| `plugin-bancolombia/` | Live Bancolombia prover (mock ZKP threshold claim) | N/A |
+| `plugin/` | Sample TLSNotary plugin (mock bank) | N/A |
 | `plugin-sdk/` | SDK for building TLSNotary plugins | N/A |
 | `tlsn-common/` | Shared TLSNotary utilities | N/A |
 
@@ -238,13 +240,15 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `VITE_SENTINEL_API` | `http://localhost:3000` | Backend API URL |
-| `VITE_TLSN_PLUGIN_URL` | `/ts-plugin-sample.js` | Plugin JS URL |
+| `VITE_TLSN_PLUGIN_URL` | `/ts-plugin-sample.js` | Plugin JS URL (mock bank) |
+| `VITE_TLSN_PLUGIN_BANCOLOMBIA_URL` | `/ts-plugin-bancolombia.js` | Plugin JS URL (Bancolombia) |
 
 ---
 
 ## Documentation
 
-- **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Detailed webhook architecture and setup
+- **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** — **v2 priority**: replacing mock ZKP with cryptographic path-level REVEAL; background, diagnosis, and step-by-step implementation plan
+- **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Webhook architecture, Bancolombia E2E flow, and verifier setup
 - **[MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Manual test cases and troubleshooting
 - **[PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — Production deployment with PostgreSQL, backups, and compliance
 - **[plans/notary-features.md](docs/plans/notary-features.md)** — Notary architecture & audit workflow
@@ -284,22 +288,33 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 
 ## Project Status
 
-### ✅ Completed
-- MPC-TLS integration with TLSNotary
-- Webhook-based proof reporting (prevents client forgery)
-- HMAC webhook authentication with replay protection
-- secp256k1 signature verification
+### ✅ v1 — Current Release
+- MPC-TLS integration with TLSNotary (live Bancolombia sessions)
+- **Mock ZKP**: client-side `balance > 1,000,000 COP` threshold claim; exact balance never leaves the browser
+- Webhook-based proof reporting with HMAC authentication and replay protection
+- secp256k1 ECDSA attestation signing
 - Balance and transaction consistency checks
-- Public key discovery endpoint
-- Proof origin binding to TLS sessions
+- Public key discovery endpoint (`GET /notary/pubkey`)
+- Proof origin binding to TLS session transcripts
 - Comprehensive test coverage (31 tests)
+- UI claim banner: displays masked account and first name when threshold is met
 
-### 🚧 Future Work
+### 🔜 v2 — Next Release (Selective Disclosure)
+
+> **Priority item.** The mock ZKP approach trusts the client to compute the threshold correctly. The next release eliminates that trust by using TLSNotary's path-level REVEAL handlers so the backend receives only the specific JSON fields it needs — cryptographically bound to the MPC-TLS session.
+
+See **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** for the full implementation plan.
+
+- Replace mock ZKP with TLSNotary path-specific `REVEAL` handlers (`data.accounts[0].balances.available`, `data.accounts[0].currency`, `data.accounts[0].number`)
+- Backend extracts balance from disclosed fields instead of trusting client claim
+- Remove `mockZkp` field from presentation; `disclosedDataFromBancolombiaPresentation()` becomes the primary path
+- End-to-end verification: balance field cryptographically bound to MPC-TLS transcript
+
+### 🚧 Backlog
 - Support for additional bank endpoints (credit score, employment verification)
 - Batch attestation verification
 - Attestation revocation lists
 - Integration with PSE's notary server for third-party proofs
-- Enhanced UI for wallet integration
 - Mobile app support
 
 ---

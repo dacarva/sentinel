@@ -8,6 +8,9 @@ const config = {
   version: "0.1.0",
   author: "Sentinel Team",
   requests: [
+    // Prove consolidated balance (the attestation)
+    // session-tracker is captured from intercepted browser headers; no
+    // channel-bridge round-trip is needed.
     {
       method: "GET",
       host: BANCOLOMBIA_HOST,
@@ -429,8 +432,7 @@ function PluginOverlay({
 
 // src/index.ts
 var BANCOLOMBIA_HOST2 = "canalpersonas-ext.apps.bancolombia.com";
-var BALANCE_PATH2 = "/super-svp/api/v1/security-filters/ch-ms-deposits/hybrid/accounts/customization/consolidated-balance";
-var BALANCE_URL = `https://${BANCOLOMBIA_HOST2}${BALANCE_PATH2}`;
+var BALANCE_URL = `https://${BANCOLOMBIA_HOST2}/super-svp/api/v1/security-filters/ch-ms-deposits/hybrid/accounts/customization/consolidated-balance`;
 var LOGIN_URL2 = "https://svpersonas.apps.bancolombia.com";
 function generateUUID() {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -448,72 +450,93 @@ function formatTimestamp() {
   const pad3 = (n) => String(n).padStart(3, "0");
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}:${pad3(d.getMilliseconds())}`;
 }
+function buildBaseHeaders(authorization, deviceId, deviceInfo, clientIp, cookie, userAgent) {
+  const headers = {
+    Host: BANCOLOMBIA_HOST2,
+    Accept: "application/json, text/plain, */*",
+    "Accept-Encoding": "identity",
+    "Accept-Language": "en-US,en;q=0.8",
+    Connection: "close",
+    "Content-Type": "application/json",
+    Origin: "https://svpersonas.apps.bancolombia.com",
+    "User-Agent": userAgent ?? "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+    Authorization: authorization,
+    channel: "SVP",
+    "app-version": "3.0.27",
+    "device-id": deviceId ?? "0000000000000000000000000000000000",
+    "device-info": deviceInfo ?? '{"device":"Unknown","os":"Unknown","browser":"Unknown"}',
+    ip: clientIp ?? "127.0.0.1",
+    "platform-type": "web",
+    "message-id": generateUUID(),
+    "request-timestamp": formatTimestamp()
+  };
+  if (cookie) {
+    headers["Cookie"] = cookie;
+  }
+  return headers;
+}
 async function onClick() {
   const isRequestPending = useState("isRequestPending", false);
   if (isRequestPending) return;
   setState("isRequestPending", true);
   setState("error", null);
   const authorization = useState("authorization", null);
+  const deviceId = useState("deviceId", null);
+  const deviceInfo = useState("deviceInfo", null);
+  const clientIp = useState("clientIp", null);
+  const cookie = useState("cookie", null);
   const sessionTracker = useState("sessionTracker", null);
+  const userAgent = useState("userAgent", null);
   if (!authorization) {
     setState("isRequestPending", false);
     setState("error", "No auth captured. Log in to Bancolombia and wait for the connection indicator.");
     return;
   }
-  const headers = {
-    Host: BANCOLOMBIA_HOST2,
-    "Accept-Encoding": "identity",
-    Connection: "close",
-    Authorization: authorization,
-    channel: "SVP",
-    "app-version": "3.0.27",
-    "device-id": "web-sentinel-prover",
-    "device-info": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
-    ip: "127.0.0.1",
-    "platform-type": "web",
-    "message-id": generateUUID(),
-    "request-timestamp": formatTimestamp()
-  };
-  if (sessionTracker) {
-    headers["session-tracker"] = sessionTracker;
+  if (!sessionTracker) {
+    setState("isRequestPending", false);
+    setState("error", "No session-tracker captured. Wait for the connection indicator after logging in.");
+    return;
   }
   try {
+    const balanceHeaders = {
+      ...buildBaseHeaders(authorization, deviceId, deviceInfo, clientIp, cookie, userAgent),
+      "session-tracker": sessionTracker
+    };
     const balanceResp = await prove(
       {
         url: BALANCE_URL,
         method: "GET",
-        headers
+        headers: balanceHeaders
       },
       {
         verifierUrl: "http://localhost:7047",
         proxyUrl: `${"ws://localhost:7047/proxy"}?token=${BANCOLOMBIA_HOST2}`,
         maxRecvData: 16384,
-        maxSentData: 8192,
+        maxSentData: 16384,
         handlers: [
           { type: "SENT", part: "START_LINE", action: "REVEAL" },
           { type: "RECV", part: "START_LINE", action: "REVEAL" },
-          {
-            type: "RECV",
-            part: "BODY",
-            action: "REVEAL",
-            params: { type: "json", path: "data.accounts.0.balances.available" }
-          },
-          {
-            type: "RECV",
-            part: "BODY",
-            action: "REVEAL",
-            params: { type: "json", path: "data.accounts.0.currency" }
-          },
-          {
-            type: "RECV",
-            part: "BODY",
-            action: "REVEAL",
-            params: { type: "json", path: "data.accounts.0.number" }
-          }
+          { type: "RECV", part: "BODY", action: "REVEAL" }
         ]
       }
     );
-    done(JSON.stringify({ results: balanceResp.results, bank: "bancolombia" }));
+    const bodyResult = balanceResp.results.find(
+      (r) => r.type === "RECV" && r.part === "BODY" && !r.params
+    );
+    let balanceAboveThreshold = false;
+    if (bodyResult?.value) {
+      try {
+        const body = JSON.parse(bodyResult.value);
+        const balance = body?.data?.accounts?.[0]?.balances?.available ?? 0;
+        balanceAboveThreshold = balance > 1e6;
+      } catch {
+      }
+    }
+    done(JSON.stringify({
+      results: balanceResp.results,
+      bank: "bancolombia",
+      mockZkp: { balanceAboveThreshold, threshold: 1e6, currency: "COP" }
+    }));
   } catch (e) {
     setState("isRequestPending", false);
     const msg = e instanceof Error ? e.message : String(e);
@@ -538,9 +561,27 @@ function main() {
     );
     if (header) {
       const auth = header.requestHeaders.find((h) => h.name.toLowerCase() === "authorization")?.value;
-      const tracker = header.requestHeaders.find((h) => h.name.toLowerCase() === "session-tracker")?.value;
-      if (auth) setState("authorization", auth);
-      if (tracker) setState("sessionTracker", tracker);
+      const deviceId = header.requestHeaders.find((h) => h.name.toLowerCase() === "device-id")?.value;
+      const deviceInfo = header.requestHeaders.find((h) => h.name.toLowerCase() === "device-info")?.value;
+      const clientIp = header.requestHeaders.find((h) => h.name.toLowerCase() === "ip")?.value;
+      const cookie = header.requestHeaders.find((h) => h.name.toLowerCase() === "cookie")?.value;
+      const sessionTracker = header.requestHeaders.find((h) => h.name.toLowerCase() === "session-tracker")?.value;
+      if (auth) {
+        setState("authorization", auth);
+        try {
+          const jwtPayload = JSON.parse(atob(auth.replace(/^Bearer\s+/i, "").split(".")[1]));
+          setState("documentType", jwtPayload?.documentType ?? "TIPDOC_FS001");
+        } catch {
+          setState("documentType", "TIPDOC_FS001");
+        }
+      }
+      if (deviceId) setState("deviceId", deviceId);
+      if (deviceInfo) setState("deviceInfo", deviceInfo);
+      if (clientIp) setState("clientIp", clientIp);
+      if (cookie) setState("cookie", cookie);
+      if (sessionTracker) setState("sessionTracker", sessionTracker);
+      const userAgent = header.requestHeaders.find((h) => h.name.toLowerCase() === "user-agent")?.value;
+      if (userAgent) setState("userAgent", userAgent);
     }
   }
   const isConnected = !!authorization;

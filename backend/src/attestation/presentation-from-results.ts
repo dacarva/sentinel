@@ -3,7 +3,7 @@
  * Used when presentation is the new format { results: ProofResultItem[] }.
  */
 import { createHash } from "crypto";
-import type { DisclosedData, JsPresentation, ProofResultItem, TransactionSummary } from "../types.js";
+import type { DisclosedData, JsPresentation, MockZkpClaim, ProofResultItem, TransactionSummary } from "../types.js";
 
 function findResultByPath(results: ProofResultItem[], path: string): string | undefined {
   // Preferred: newer plugins set params.path explicitly.
@@ -58,9 +58,9 @@ function buildTransactionsSummary(results: ProofResultItem[]): TransactionSummar
  */
 export function disclosedDataFromBancolombiaPresentation(presentation: JsPresentation): DisclosedData {
   const results = presentation.results ?? [];
-  const balanceStr = findResultByPath(results, 'data.accounts.0.balances.available');
-  const currencyStr = findResultByPath(results, 'data.accounts.0.currency');
-  const accountNumberStr = findResultByPath(results, 'data.accounts.0.number');
+  const balanceStr = findResultByPath(results, 'data.accounts[0].balances.available');
+  const currencyStr = findResultByPath(results, 'data.accounts[0].currency');
+  const accountNumberStr = findResultByPath(results, 'data.accounts[0].number');
 
   if (balanceStr === undefined || balanceStr === '')
     throw new Error('bancolombia presentation missing balance');
@@ -78,6 +78,20 @@ export function disclosedDataFromBancolombiaPresentation(presentation: JsPresent
     balance,
     currency: String(currencyStr).trim(),
     account_id_hash,
+    transactions_summary: { months: [] },
+  };
+}
+
+/**
+ * Convert a mock ZKP threshold claim to DisclosedData.
+ * The exact balance is never disclosed; balance is set to the threshold value
+ * when the claim is true (sufficient to pass the ≥ threshold verification check).
+ */
+export function disclosedDataFromMockZkp(mockZkp: MockZkpClaim): DisclosedData {
+  return {
+    balance: mockZkp.balanceAboveThreshold ? mockZkp.threshold : 0,
+    currency: mockZkp.currency ?? 'COP',
+    account_id_hash: createHash('sha256').update('anonymous').digest('hex'),
     transactions_summary: { months: [] },
   };
 }

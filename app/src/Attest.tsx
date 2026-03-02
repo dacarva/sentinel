@@ -37,10 +37,37 @@ interface AttestResult {
   message?: string
 }
 
-/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank }. */
+interface ThresholdClaim {
+  firstName: string
+  maskedAccount: string
+  currency: string
+}
+
+function extractThresholdClaim(proof: PluginProof): ThresholdClaim | null {
+  if (!proof.mockZkp?.balanceAboveThreshold) return null
+  const bodyResult = proof.results?.find((r) => r.type === 'RECV' && r.part === 'BODY')
+  if (!bodyResult?.value) return null
+  try {
+    const body = JSON.parse(bodyResult.value) as {
+      data?: { accounts?: Array<{ number?: string; name?: string; currency?: string }> }
+    }
+    const account = body?.data?.accounts?.[0]
+    if (!account) return null
+    const number = account.number ?? ''
+    const maskedAccount = number.length > 4 ? `${number.slice(0, 4)}${'*'.repeat(number.length - 4)}` : '****'
+    const firstName = (account.name ?? '').trim().split(/\s+/)[0] ?? ''
+    const currency = proof.mockZkp.currency ?? account.currency ?? 'COP'
+    return { firstName, maskedAccount, currency }
+  } catch {
+    return null
+  }
+}
+
+/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank, mockZkp }. */
 interface PluginProof {
   results?: Array<{ type?: string; part?: string; action?: string; params?: unknown; value?: string }>;
   bank?: string;
+  mockZkp?: { balanceAboveThreshold: boolean; threshold: number; currency?: string };
 }
 
 export function Attest() {
@@ -48,10 +75,11 @@ export function Attest() {
   const [userAddress, setUserAddress] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [selectedPlugin, setSelectedPlugin] = useState<string>('mock-bank')
+  const [selectedPlugin, setSelectedPlugin] = useState<string>('bancolombia')
   const [status, setStatus] = useState<AttestStatus>('idle')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<AttestResult | null>(null)
+  const [thresholdClaim, setThresholdClaim] = useState<ThresholdClaim | null>(null)
 
   useEffect(() => {
     if (connectedAddress) setUserAddress(connectedAddress)
@@ -67,6 +95,7 @@ export function Attest() {
 
     setResult(null)
     setMessage('')
+    setThresholdClaim(null)
 
     if (typeof window.tlsn === 'undefined') {
       setStatus('error')
@@ -119,6 +148,7 @@ export function Attest() {
           return
         }
         console.log('proof', proof)
+        setThresholdClaim(extractThresholdClaim(proof))
       }
       else {
         const mockProof = {
@@ -137,8 +167,9 @@ export function Attest() {
 
 
       setStatus('submitting')
-      const presentation: { results: PluginProof['results']; bank?: string } = { results: proof.results }
+      const presentation: { results: PluginProof['results']; bank?: string; mockZkp?: PluginProof['mockZkp'] } = { results: proof.results }
       if (proof.bank) presentation.bank = proof.bank
+      if (proof.mockZkp) presentation.mockZkp = proof.mockZkp
       const res = await fetch(`${SENTINEL_API}/attest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -233,6 +264,12 @@ export function Attest() {
                 : 'Submitting to backend…'}
         </button>
       </div>
+
+      {thresholdClaim && status === 'success' && (
+        <div className="attest-claim">
+          <strong>{thresholdClaim.firstName}</strong> ({thresholdClaim.maskedAccount}) has more than 1,000,000 {thresholdClaim.currency}
+        </div>
+      )}
 
       {(message || result) && (
         <div className={`attest-result attest-result--${status}`}>
