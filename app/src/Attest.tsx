@@ -147,7 +147,10 @@ export function Attest() {
       let proof: PluginProof
 
       if (!mocking)  {
+        console.log('[sentinel-app] calling window.tlsn.execCode()...')
         const resultString = await window.tlsn.execCode(code)
+        console.log('[sentinel-app] execCode returned. type:', typeof resultString, 'value:', resultString)
+
         if (resultString == null || typeof resultString !== 'string') {
           setStatus('error')
           setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
@@ -156,16 +159,19 @@ export function Attest() {
         try {
           proof = JSON.parse(resultString) as PluginProof
         } catch {
+          console.error('[sentinel-app] JSON.parse failed on resultString:', resultString)
           setStatus('error')
           setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
           return
         }
         if (!proof.results || !Array.isArray(proof.results)) {
+          console.error('[sentinel-app] proof.results missing or not array:', proof)
           setStatus('error')
           setMessage('Proof missing results array. Complete the full prove flow in the extension.')
           return
         }
-        console.log('proof', proof)
+        console.log('[sentinel-app] proof', proof)
+        console.log('[sentinel-app] balance_raw present:', !!proof.balance_raw, 'value:', proof.balance_raw)
         setThresholdClaim(extractThresholdClaim(proof))
       }
       else {
@@ -189,14 +195,18 @@ export function Attest() {
       // This keeps the raw balance from ever reaching the backend.
       let zkProof: Awaited<ReturnType<typeof generateBalanceProof>> | undefined
       if (proof.balance_raw) {
+        console.log('[sentinel-app] balance_raw found, entering ZK proof path:', proof.balance_raw)
         try {
           setMessage('Generating ZK proof…')
           zkProof = await generateBalanceProof(proof.balance_raw)
+          console.log('[sentinel-app] ZK proof generated successfully:', zkProof)
         } catch (zkErr) {
           // ZK proof generation failed — fall back to v2 reveal path
-          console.warn('ZK proof generation failed, falling back to v2:', zkErr)
+          console.warn('[sentinel-app] ZK proof generation failed, falling back to v2:', zkErr)
           zkProof = undefined
         }
+      } else {
+        console.log('[sentinel-app] no balance_raw — skipping ZK path, using v2 reveal')
       }
 
       const presentation: { results: PluginProof['results']; bank?: string; zkProof?: typeof zkProof } = {

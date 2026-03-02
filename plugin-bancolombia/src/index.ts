@@ -127,11 +127,14 @@ async function onClick(): Promise<void> {
     // The session-tracker is captured directly from the intercepted browser
     // headers; no channel-bridge round-trip is needed.
     // -----------------------------------------------------------------------
+    console.log('[sentinel-plugin] onClick: starting prove, authorization present:', !!authorization, 'sessionTracker present:', !!sessionTracker);
+
     const balanceHeaders = {
       ...buildBaseHeaders(authorization, deviceId, deviceInfo, clientIp, cookie, userAgent),
       'session-tracker': sessionTracker,
     };
 
+    console.log('[sentinel-plugin] calling prove()...');
     const balanceResp = await prove(
       {
         url: BALANCE_URL,
@@ -166,17 +169,48 @@ async function onClick(): Promise<void> {
       }
     );
 
+    console.log('[sentinel-plugin] prove() returned. results count:', balanceResp.results?.length);
+    console.log('[sentinel-plugin] results:', JSON.stringify(balanceResp.results));
+
     // Extract balance_raw so the app can generate a ZK proof in the browser.
     // The TLSNotary plugin runs in QuickJS (no WASM support), so proof generation
     // happens in the React app which runs in a real browser context.
-    const balanceResult = balanceResp.results.find(
+    //
+    // The extension may return REVEAL results without a `params` field — only a
+    // raw fragment like `value: '"available":8352628.1'` — so we try both.
+    const byParams = balanceResp.results.find(
       (r) =>
         r.type === 'RECV' &&
         r.part === 'BODY' &&
         (r.params as { path?: string } | undefined)?.path?.endsWith('available')
     );
-    const balanceRaw = balanceResult?.value;
+    const byFragment = balanceResp.results.find(
+      (r) =>
+        r.type === 'RECV' &&
+        r.part === 'BODY' &&
+        typeof r.value === 'string' &&
+        (r.value as string).includes('"available"')
+    );
 
+    console.log('[sentinel-plugin] byParams:', JSON.stringify(byParams));
+    console.log('[sentinel-plugin] byFragment:', JSON.stringify(byFragment));
+
+    let balanceRaw: string | undefined;
+    if (byParams?.value !== undefined) {
+      balanceRaw = String(byParams.value);
+    } else if (byFragment?.value !== undefined) {
+      const match = (byFragment.value as string).match(/"available"\s*:\s*([^,}\s"]+)/);
+      if (match) balanceRaw = match[1];
+    }
+
+    console.log('[sentinel-plugin] balanceRaw:', balanceRaw);
+
+    const donePayload = JSON.stringify({
+      results: balanceResp.results,
+      bank: 'bancolombia',
+      ...(balanceRaw !== undefined ? { balance_raw: String(balanceRaw) } : {}),
+    });
+    console.log('[sentinel-plugin] calling done() with payload length:', donePayload.length);
     done(JSON.stringify({
       results: balanceResp.results,
       bank: 'bancolombia',
