@@ -52,6 +52,37 @@ export interface JsPresentation {
   bank?: string;
 }
 
+/** ZK public inputs attached to a v3 presentation. */
+export interface ZkProofPayload {
+  /** Hex-encoded Barretenberg UltraHonk proof bytes. */
+  proof: string;
+  publicInputs: {
+    /** Hex-encoded sha256(balance_le_bytes || blinder) commitment. */
+    commitment: string;
+    /** Public threshold used in proof (e.g. 1_000_000). */
+    threshold: number;
+  };
+}
+
+/** v3 ZK presentation: JS results for TLS session binding + a Noir proof. */
+export interface JsPresentationWithZk extends JsPresentation {
+  zkProof: ZkProofPayload;
+}
+
+/** v3 disclosed data — stores commitment and proof, never the raw balance. */
+export interface ZkDisclosedData {
+  /** sha256(balance_le_bytes || blinder) hex — binds proof to a specific balance. */
+  commitment: string;
+  /** Public threshold used in proof. */
+  threshold: number;
+  /** ISO 4217 currency code (still revealed). */
+  currency: string;
+  /** SHA-256 of account number (still revealed). */
+  account_id_hash: string;
+  /** Hex-encoded Barretenberg UltraHonk proof bytes. */
+  balance_proof: string;
+}
+
 export interface NotaryKeyPair {
   publicKey: string;
   privateKey?: string;
@@ -65,8 +96,10 @@ export interface Attestation {
     signature: string;
     public_key: string;
   };
-  disclosed_data: DisclosedData;
+  disclosed_data: DisclosedData | ZkDisclosedData;
   proof_origin?: ProofOrigin;
+  /** v2_reveal: plaintext balance stored; v3_zk: ZK proof stored, no raw balance. */
+  proof_type?: "v2_reveal" | "v3_zk";
   status: "pending" | "verified" | "failed";
   errors?: string[];
 }

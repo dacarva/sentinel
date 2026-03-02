@@ -3,13 +3,13 @@
  * POST /attest, GET /attest/:id, POST /verify/:id.
  */
 import express from "express";
-import { ingest, ingestFromJsPresentation } from "./attestation/ingest.js";
+import { ingest, ingestFromJsPresentation, ingestZkPresentation } from "./attestation/ingest.js";
 import { loadAttestation, saveAttestation } from "./attestation/storage.js";
 import { verify } from "./verifier/index.js";
 import { storeWebhook, lookupWebhook } from "./attestation/webhook-store.js";
 import { getTlsnWebhookSecret, requireWebhookVerification, getNotaryPubKey } from "./config.js";
 import { verifyWebhookHmac } from "./attestation/webhook-hmac.js";
-import type { DisclosedData, JsPresentation, TlsnWebhookPayload, TlsnHandlerResult } from "./types.js";
+import type { DisclosedData, JsPresentation, JsPresentationWithZk, TlsnWebhookPayload, TlsnHandlerResult } from "./types.js";
 
 const app = express();
 
@@ -102,6 +102,24 @@ app.post("/attest", async (req, res) => {
         }
         webhook = found;
       }
+
+      // v3 ZK path: presentation includes a Noir proof — never store raw balance
+      const isZkPresentation = (presentation as JsPresentationWithZk).zkProof !== undefined;
+      if (isZkPresentation) {
+        const att = await ingestZkPresentation(
+          presentation as JsPresentationWithZk,
+          user_address,
+          webhook
+        );
+        res.status(201).json({
+          attestation_id: att.id,
+          status: att.status,
+          proof_type: att.proof_type,
+        });
+        return;
+      }
+
+      // v2 legacy path: plaintext balance stored
       const att = await ingestFromJsPresentation(
         presentation as JsPresentation,
         user_address,

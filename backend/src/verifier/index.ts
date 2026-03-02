@@ -32,15 +32,21 @@ export async function verify(
   if (!verifySignature(att, notaryPubKey)) {
     errors.push("Invalid notary signature");
   }
-  try {
-    checkBalance(att.disclosed_data, config);
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : String(e));
-  }
-  try {
-    checkConsistency(att.disclosed_data, config);
-  } catch (e) {
-    errors.push(e instanceof Error ? e.message : String(e));
+
+  if (att.proof_type === "v3_zk") {
+    // ZK attestation: balance proof was verified at ingest time.
+    // Skip arithmetic balance/consistency checks — the ZK proof is the guarantee.
+  } else {
+    try {
+      checkBalance(att.disclosed_data as import("../types.js").DisclosedData, config);
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
+    try {
+      checkConsistency(att.disclosed_data as import("../types.js").DisclosedData, config);
+    } catch (e) {
+      errors.push(e instanceof Error ? e.message : String(e));
+    }
   }
 
   const isValid = errors.length === 0;

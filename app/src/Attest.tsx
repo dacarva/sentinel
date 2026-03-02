@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useConnection } from 'wagmi'
+import { generateBalanceProof } from './zkproof'
 import './Attest.css'
 
 const SENTINEL_API = import.meta.env.VITE_SENTINEL_API ?? 'http://localhost:3000'
@@ -79,10 +80,12 @@ function extractThresholdClaim(proof: PluginProof): ThresholdClaim | null {
   return { firstName, maskedAccount, currency }
 }
 
-/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank }. */
+/** Plugin returns string from done(JSON.stringify(resp)); resp has { results }, optional { bank }, and optional { balance_raw } for ZK. */
 interface PluginProof {
   results?: Array<{ type?: string; part?: string; action?: string; params?: unknown; value?: string }>;
   bank?: string;
+  /** Raw balance string exposed by plugin so the app can generate a ZK proof in the browser. */
+  balance_raw?: string;
 }
 
 export function Attest() {
@@ -182,8 +185,26 @@ export function Attest() {
 
 
       setStatus('submitting')
-      const presentation: { results: PluginProof['results']; bank?: string } = { results: proof.results }
+      // v3 ZK path: if the plugin provided balance_raw, generate a ZK proof in the browser.
+      // This keeps the raw balance from ever reaching the backend.
+      let zkProof: Awaited<ReturnType<typeof generateBalanceProof>> | undefined
+      if (proof.balance_raw) {
+        try {
+          setMessage('Generating ZK proof…')
+          zkProof = await generateBalanceProof(proof.balance_raw)
+        } catch (zkErr) {
+          // ZK proof generation failed — fall back to v2 reveal path
+          console.warn('ZK proof generation failed, falling back to v2:', zkErr)
+          zkProof = undefined
+        }
+      }
+
+      const presentation: { results: PluginProof['results']; bank?: string; zkProof?: typeof zkProof } = {
+        results: proof.results,
+      }
       if (proof.bank) presentation.bank = proof.bank
+      if (zkProof) presentation.zkProof = zkProof
+
       const res = await fetch(`${SENTINEL_API}/attest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -44,6 +44,14 @@ data/attestations/
 # Built TLSNotary plugin (generate with: bun run plugin:build)
 app/public/mock-bank-plugin.wasm
 
+# Noir circuit compiled artifacts — generated in CI/CD, not committed to repo.
+# Run: cd circuit && nargo compile && bb write_vk -b target/balance_threshold.json -o target/
+# See: docs/ZK_CIRCUITS.md
+circuit/target/
+
+# Circuit artifact served to the browser (copied from circuit/target/ during build)
+app/public/circuit.json
+
 # Binaryen (downloaded by extism-js install for WASM compile; not project source)
 binaryen/
 binaryen*

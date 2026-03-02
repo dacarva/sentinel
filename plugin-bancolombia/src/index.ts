@@ -166,7 +166,22 @@ async function onClick(): Promise<void> {
       }
     );
 
-    done(JSON.stringify({ results: balanceResp.results, bank: 'bancolombia' }));
+    // Extract balance_raw so the app can generate a ZK proof in the browser.
+    // The TLSNotary plugin runs in QuickJS (no WASM support), so proof generation
+    // happens in the React app which runs in a real browser context.
+    const balanceResult = balanceResp.results.find(
+      (r) =>
+        r.type === 'RECV' &&
+        r.part === 'BODY' &&
+        (r.params as { path?: string } | undefined)?.path?.endsWith('available')
+    );
+    const balanceRaw = balanceResult?.value;
+
+    done(JSON.stringify({
+      results: balanceResp.results,
+      bank: 'bancolombia',
+      ...(balanceRaw !== undefined ? { balance_raw: String(balanceRaw) } : {}),
+    }));
   } catch (e) {
     setState('isRequestPending', false);
     const msg = e instanceof Error ? e.message : String(e);
