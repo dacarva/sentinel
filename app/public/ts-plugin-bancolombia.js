@@ -516,27 +516,34 @@ async function onClick() {
         handlers: [
           { type: "SENT", part: "START_LINE", action: "REVEAL" },
           { type: "RECV", part: "START_LINE", action: "REVEAL" },
-          { type: "RECV", part: "BODY", action: "REVEAL" }
+          {
+            type: "RECV",
+            part: "BODY",
+            action: "REVEAL",
+            params: { type: "json", path: "data.accounts[0].balances.available" }
+          },
+          {
+            type: "RECV",
+            part: "BODY",
+            action: "REVEAL",
+            params: { type: "json", path: "data.accounts[0].currency" }
+          },
+          {
+            type: "RECV",
+            part: "BODY",
+            action: "REVEAL",
+            params: { type: "json", path: "data.accounts[0].number" }
+          },
+          {
+            type: "RECV",
+            part: "BODY",
+            action: "REVEAL",
+            params: { type: "json", path: "data.accounts[0].name" }
+          }
         ]
       }
     );
-    const bodyResult = balanceResp.results.find(
-      (r) => r.type === "RECV" && r.part === "BODY" && !r.params
-    );
-    let balanceAboveThreshold = false;
-    if (bodyResult?.value) {
-      try {
-        const body = JSON.parse(bodyResult.value);
-        const balance = body?.data?.accounts?.[0]?.balances?.available ?? 0;
-        balanceAboveThreshold = balance > 1e6;
-      } catch {
-      }
-    }
-    done(JSON.stringify({
-      results: balanceResp.results,
-      bank: "bancolombia",
-      mockZkp: { balanceAboveThreshold, threshold: 1e6, currency: "COP" }
-    }));
+    done(JSON.stringify({ results: balanceResp.results, bank: "bancolombia" }));
   } catch (e) {
     setState("isRequestPending", false);
     const msg = e instanceof Error ? e.message : String(e);

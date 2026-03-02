@@ -6,7 +6,7 @@ import type { Attestation, DisclosedData, JsPresentation, TlsnWebhookPayload, Pr
 import { getNotaryPubKey, getNotaryPrivKey } from "../config.js";
 import { buildPayload } from "../verifier/signature.js";
 import { verifyPresentation } from "./verifier-adapter.js";
-import { disclosedDataFromJsPresentation, disclosedDataFromBancolombiaPresentation, disclosedDataFromMockZkp } from "./presentation-from-results.js";
+import { disclosedDataFromJsPresentation, disclosedDataFromBancolombiaPresentation } from "./presentation-from-results.js";
 import { bindUserAddress } from "./bind.js";
 import { saveAttestation, generateAttestationId } from "./storage.js";
 import EC from "elliptic";
@@ -94,11 +94,9 @@ export async function ingestFromJsPresentation(
   webhook?: TlsnWebhookPayload
 ): Promise<Attestation> {
   const disclosed_data =
-    presentation.mockZkp
-      ? disclosedDataFromMockZkp(presentation.mockZkp)
-      : presentation.bank === 'bancolombia'
-        ? disclosedDataFromBancolombiaPresentation(presentation)
-        : disclosedDataFromJsPresentation(presentation);
+    presentation.bank === 'bancolombia'
+      ? disclosedDataFromBancolombiaPresentation(presentation)
+      : disclosedDataFromJsPresentation(presentation);
   const att = buildAttestation(disclosed_data, user_address);
   if (webhook) {
     att.proof_origin = buildProofOrigin(webhook);

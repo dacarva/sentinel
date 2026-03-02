@@ -43,31 +43,46 @@ interface ThresholdClaim {
   currency: string
 }
 
-function extractThresholdClaim(proof: PluginProof): ThresholdClaim | null {
-  if (!proof.mockZkp?.balanceAboveThreshold) return null
-  const bodyResult = proof.results?.find((r) => r.type === 'RECV' && r.part === 'BODY')
-  if (!bodyResult?.value) return null
-  try {
-    const body = JSON.parse(bodyResult.value) as {
-      data?: { accounts?: Array<{ number?: string; name?: string; currency?: string }> }
-    }
-    const account = body?.data?.accounts?.[0]
-    if (!account) return null
-    const number = account.number ?? ''
-    const maskedAccount = number.length > 4 ? `${number.slice(0, 4)}${'*'.repeat(number.length - 4)}` : '****'
-    const firstName = (account.name ?? '').trim().split(/\s+/)[0] ?? ''
-    const currency = proof.mockZkp.currency ?? account.currency ?? 'COP'
-    return { firstName, maskedAccount, currency }
-  } catch {
-    return null
-  }
+/** Extract a scalar value from a raw TLSNotary fragment like `"available":8481134.26`. */
+function extractLeafValue(results: PluginProof['results'], leafKey: string): string | undefined {
+  // Prefer explicit params.path match (future extension versions may include it).
+  const byParams = results?.find(
+    (r) => r.type === 'RECV' && r.part === 'BODY' &&
+           (r.params as { path?: string } | undefined)?.path?.endsWith(leafKey)
+  )
+  if (byParams?.value) return byParams.value
+
+  // Fallback: extension reveals raw key-value fragments, e.g. `"available":8481134.26`.
+  const fragment = results?.find(
+    (r) => r.type === 'RECV' && r.part === 'BODY' && r.value?.includes(`"${leafKey}"`)
+  )
+  if (!fragment?.value) return undefined
+  const match = fragment.value.match(new RegExp(`"${leafKey}"\\s*:\\s*("([^"]*)"|[^,}\\s]+)`))
+  if (!match) return undefined
+  return match[2] !== undefined ? match[2] : match[1]
 }
 
-/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank, mockZkp }. */
+function extractThresholdClaim(proof: PluginProof): ThresholdClaim | null {
+  const balanceStr = extractLeafValue(proof.results, 'available')
+  const currency   = extractLeafValue(proof.results, 'currency') ?? 'COP'
+  const number     = extractLeafValue(proof.results, 'number') ?? ''
+  const name       = extractLeafValue(proof.results, 'name') ?? ''
+
+  if (!balanceStr) return null
+  const balance = Number(balanceStr)
+  if (Number.isNaN(balance) || balance <= 1_000_000) return null
+
+  const maskedAccount = number.length > 4
+    ? `${number.slice(0, 4)}${'*'.repeat(number.length - 4)}`
+    : '****'
+  const firstName = name.trim().split(/\s+/)[0] ?? ''
+  return { firstName, maskedAccount, currency }
+}
+
+/** Plugin returns string from done(JSON.stringify(resp)); resp has { results } and optional { bank }. */
 interface PluginProof {
   results?: Array<{ type?: string; part?: string; action?: string; params?: unknown; value?: string }>;
   bank?: string;
-  mockZkp?: { balanceAboveThreshold: boolean; threshold: number; currency?: string };
 }
 
 export function Attest() {
@@ -167,9 +182,8 @@ export function Attest() {
 
 
       setStatus('submitting')
-      const presentation: { results: PluginProof['results']; bank?: string; mockZkp?: PluginProof['mockZkp'] } = { results: proof.results }
+      const presentation: { results: PluginProof['results']; bank?: string } = { results: proof.results }
       if (proof.bank) presentation.bank = proof.bank
-      if (proof.mockZkp) presentation.mockZkp = proof.mockZkp
       const res = await fetch(`${SENTINEL_API}/attest`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

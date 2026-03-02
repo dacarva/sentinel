@@ -1,198 +1,137 @@
-# Selective Disclosure — v2 Implementation Plan
+# Selective Disclosure
 
-## Status: Scheduled for next release
-
-This document describes the plan to replace the current mock ZKP threshold claim with
-cryptographic selective disclosure via TLSNotary path-level REVEAL handlers.
+## Status: Completed in v2
 
 ---
 
-## Background
+## What was shipped
 
-### What works today (v1 — mock ZKP)
+The Bancolombia plugin now performs cryptographic selective disclosure via TLSNotary
+path-level REVEAL handlers. Instead of revealing the full HTTP response body and computing
+a threshold claim client-side, the verifier extracts only four specific JSON fields and
+commits them to the MPC-TLS transcript. The backend receives those values directly from
+the verifier — not from the client — making the balance figure cryptographically bound to
+the real TLS session.
 
-The Bancolombia plugin completes a full MPC-TLS session and reveals the entire RECV BODY
-to both the browser and the verifier. After `prove()` returns, the **plugin itself** parses
-the JSON and computes `balance > 1,000,000` client-side, then passes this boolean claim to
-the backend via a `mockZkp` field in the presentation.
+### v1 — Mock ZKP (removed)
 
-```
-MPC-TLS session → full body revealed → plugin parses → boolean claim sent to backend
-```
+The original approach revealed the entire RECV body, then the plugin parsed the JSON and
+computed `balance > 1,000,000` client-side. A boolean `mockZkp.balanceAboveThreshold` was
+sent to the backend alongside the proof.
 
-**Trust assumption**: the backend trusts that the client computed the threshold correctly.
-The actual balance figure is never sent, but a malicious client could fabricate the
-`balanceAboveThreshold: true` flag without having a real session at all (the webhook
-still validates the _session_ happened, but not that the threshold was computed honestly).
+**Trust gap**: a malicious client could fabricate `balanceAboveThreshold: true` without
+having a real session. The webhook validated that *a* session happened, but not that the
+threshold was computed honestly.
 
-### What selective disclosure achieves (v2)
-
-TLSNotary's path-specific REVEAL handlers instruct the verifier to extract and commit only
-the specified JSON fields from the response body. The backend receives those field values
-directly from the verifier webhook — not from the client — and cryptographically bound to
-the MPC-TLS transcript.
+### v2 — Path-specific REVEAL (current)
 
 ```
-MPC-TLS session → verifier extracts specific fields → fields bound to transcript → backend reads balance directly
+MPC-TLS session
+    ↓
+Verifier extracts 4 JSON fields (available, currency, number, name)
+    ↓
+Fields committed to transcript — client cannot alter them
+    ↓
+Backend reads balance directly from verified fields
 ```
 
-**Trust assumption eliminated**: the client cannot forge the balance value because it comes
-from the verifier's witness of the TLS session, not from client-side computation.
+**Trust assumption eliminated.** The balance comes from the verifier's witness of the TLS
+session, not from any client-side computation.
 
 ---
 
-## Why it isn't done yet
+## Implementation
 
-TLSNotary's path-specific handler notation (`params: { type: 'json', path: '...' }`) was
-found to produce empty results in practice during v1 development — the handlers were
-accepted by the extension without error but the corresponding `value` fields came back
-empty or missing. The root cause is likely one of:
+### Plugin (`plugin-bancolombia/src/index.ts`)
 
-1. **Path syntax incompatibility** — the path format expected by the current extension
-   version may differ from what was tested (e.g. `data.accounts[0].balances.available`
-   vs. bracket notation vs. a different separator).
-2. **Extension version mismatch** — path-level REVEAL may require a newer alpha of the
-   extension or a specific verifier binary version.
-3. **Body encoding** — the response may be chunked or compressed in a way the path
-   extractor doesn't handle without additional configuration.
-
-Investigation was deferred in favour of shipping a working end-to-end flow for v1.
-
----
-
-## v2 Implementation Plan
-
-### Step 1 — Diagnose path handler support
-
-Before writing any backend code, confirm which path notation the running extension version
-accepts:
-
-```typescript
-// Candidate notations to test one at a time:
-{ type: 'RECV', part: 'BODY', action: 'REVEAL', params: { type: 'json', path: 'data.accounts[0].balances.available' } }
-{ type: 'RECV', part: 'BODY', action: 'REVEAL', params: { type: 'json', path: 'data.accounts.0.balances.available' } }
-{ type: 'RECV', part: 'BODY', action: 'REVEAL', params: { type: 'json', path: '$.data.accounts[0].balances.available' } }
-```
-
-Add a diagnostic `console.log(JSON.stringify(balanceResp.results, null, 2))` in the plugin
-after `prove()` returns and inspect the extension DevTools console.
-
-Also check the TLSNotary extension changelog between alpha versions for breaking changes to
-handler params.
-
-### Step 2 — Update plugin handlers
-
-Once the correct path notation is confirmed, replace the full-body REVEAL in
-`plugin-bancolombia/src/index.ts` with path-specific handlers:
+Six handlers instead of one full-body REVEAL:
 
 ```typescript
 handlers: [
-  { type: 'SENT', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
-  { type: 'RECV', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
-  {
-    type: 'RECV',
-    part: 'BODY',
-    action: 'REVEAL',
-    params: { type: 'json', path: 'data.accounts[0].balances.available' },
-  } satisfies Handler,
-  {
-    type: 'RECV',
-    part: 'BODY',
-    action: 'REVEAL',
-    params: { type: 'json', path: 'data.accounts[0].currency' },
-  } satisfies Handler,
-  {
-    type: 'RECV',
-    part: 'BODY',
-    action: 'REVEAL',
-    params: { type: 'json', path: 'data.accounts[0].number' },
-  } satisfies Handler,
-],
+  { type: 'SENT', part: 'START_LINE', action: 'REVEAL' },
+  { type: 'RECV', part: 'START_LINE', action: 'REVEAL' },
+  { type: 'RECV', part: 'BODY', action: 'REVEAL',
+    params: { type: 'json', path: 'data.accounts[0].balances.available' } },
+  { type: 'RECV', part: 'BODY', action: 'REVEAL',
+    params: { type: 'json', path: 'data.accounts[0].currency' } },
+  { type: 'RECV', part: 'BODY', action: 'REVEAL',
+    params: { type: 'json', path: 'data.accounts[0].number' } },
+  { type: 'RECV', part: 'BODY', action: 'REVEAL',
+    params: { type: 'json', path: 'data.accounts[0].name' } },
+]
 ```
 
-Remove the mock ZKP post-processing block and the `mockZkp` field from `done()`:
+`done()` is simplified — no mock ZKP post-processing:
 
 ```typescript
 done(JSON.stringify({ results: balanceResp.results, bank: 'bancolombia' }));
 ```
 
-### Step 3 — Backend: remove mock ZKP routing
+### Proof format (as received from the extension)
 
-In `backend/src/attestation/ingest.ts`, remove the `mockZkp` branch:
+The TLSNotary extension returns raw key-value text fragments — not nested JSON paths and
+not scalar values alone. The `params.path` field used in the handler spec is **not**
+echoed back in the results. Each revealed BODY result looks like:
 
-```typescript
-// Before (v1):
-const disclosed_data =
-  presentation.mockZkp
-    ? disclosedDataFromMockZkp(presentation.mockZkp)
-    : presentation.bank === 'bancolombia'
-      ? disclosedDataFromBancolombiaPresentation(presentation)
-      : disclosedDataFromJsPresentation(presentation);
-
-// After (v2):
-const disclosed_data =
-  presentation.bank === 'bancolombia'
-    ? disclosedDataFromBancolombiaPresentation(presentation)
-    : disclosedDataFromJsPresentation(presentation);
+```json
+{ "type": "RECV", "part": "BODY", "value": "\"available\":8481134.26" }
+{ "type": "RECV", "part": "BODY", "value": "\"currency\":\"COP\"" }
+{ "type": "RECV", "part": "BODY", "value": "\"number\":\"20303826004\"" }
+{ "type": "RECV", "part": "BODY", "value": "\"name\":\"CARVAJAL CERTUCHE DA\"" }
 ```
 
-`disclosedDataFromBancolombiaPresentation()` in `presentation-from-results.ts` already
-contains the correct field-extraction logic — it just needs the path-specific results to
-be non-empty for it to work.
+### Backend field extraction (`presentation-from-results.ts`)
 
-### Step 4 — Types cleanup
+`findResultByPath` uses a two-step lookup:
 
-Remove `MockZkpClaim` from `backend/src/types.ts` and the `mockZkp?` field from
-`JsPresentation`. Remove `disclosedDataFromMockZkp()` from `presentation-from-results.ts`.
+1. **Primary**: check `params?.path === fullPath` (forward-compat if a future extension
+   version preserves handler params in results).
+2. **Fallback**: extract the leaf key from the dotted path
+   (`data.accounts[0].balances.available` → `available`), search for a BODY result whose
+   `value` contains `"available"`, then regex-extract the scalar.
 
-### Step 5 — App: update UI claim
+### Types and routing cleanup
 
-The `extractThresholdClaim()` helper in `app/src/Attest.tsx` parses the full body from
-`proof.results`. After selective disclosure, only the specific fields will be present — the
-full body string will no longer be in `results`. Update `extractThresholdClaim()` to read
-from the path-specific result items instead:
+- `MockZkpClaim` interface deleted from `types.ts`
+- `mockZkp?` field removed from `JsPresentation`
+- `disclosedDataFromMockZkp()` deleted from `presentation-from-results.ts`
+- `ingest.ts` routes directly: `bancolombia` → `disclosedDataFromBancolombiaPresentation`,
+  else → `disclosedDataFromJsPresentation`
 
-```typescript
-function extractThresholdClaim(proof: PluginProof): ThresholdClaim | null {
-  const balanceResult = proof.results?.find(
-    (r) => r.type === 'RECV' && r.part === 'BODY' && (r.params as { path?: string })?.path === 'data.accounts[0].balances.available'
-  )
-  const nameResult = proof.results?.find(
-    (r) => r.type === 'RECV' && r.part === 'BODY' && (r.params as { path?: string })?.path === 'data.accounts[0].number'
-  )
-  // ... extract balance, compare to threshold, build claim
-}
-```
+### App UI (`app/src/Attest.tsx`)
 
-### Step 6 — Rebuild and test
+`extractThresholdClaim()` uses the same leaf-key approach as the backend to read balance,
+currency, number, and name from the raw fragments. The banner appears only when the
+cryptographically-proven balance exceeds 1,000,000:
 
-```bash
-bun run --filter @tlsn/ts-plugin-bancolombia build
-cp plugin-bancolombia/build/ts-plugin-bancolombia.js app/public/ts-plugin-bancolombia.js
-REQUIRE_WEBHOOK=false bun test backend/src   # all 31 tests must pass
-```
-
-Then run the full E2E flow (see [ZKTLS_WEBHOOK_SETUP.md](ZKTLS_WEBHOOK_SETUP.md)).
+> **CARVAJAL** (2030\*\*\*\*\*\*\*) has more than 1,000,000 COP
 
 ---
 
-## Files to Change in v2
+## What selective disclosure does NOT yet provide
 
-| File | Change |
-|------|--------|
-| `plugin-bancolombia/src/index.ts` | Replace full-body REVEAL with path-specific handlers; remove mock ZKP block |
-| `backend/src/types.ts` | Remove `MockZkpClaim`; remove `mockZkp?` from `JsPresentation` |
-| `backend/src/attestation/presentation-from-results.ts` | Remove `disclosedDataFromMockZkp()` |
-| `backend/src/attestation/ingest.ts` | Remove `mockZkp` branch; route directly to `disclosedDataFromBancolombiaPresentation` |
-| `app/src/Attest.tsx` | Update `extractThresholdClaim()` to read path-specific results |
+The balance value is cryptographically revealed — the client cannot forge it. However,
+the backend still receives the **exact balance figure**. A true zero-knowledge proof would
+let the backend verify `balance > 1,000,000` without learning the actual number.
+
+That is the goal of the next stage: **ZK circuits**.
 
 ---
 
-## Acceptance Criteria
+## Next: ZK Circuits (v3)
 
-- [ ] `balanceResp.results` contains non-empty `value` for each path-specific handler
-- [ ] `POST /attest` returns `201` without `mockZkp` in the presentation
-- [ ] `POST /verify/:id` returns `isValid: true` with real balance extracted from revealed fields
-- [ ] `MockZkpClaim` type and `disclosedDataFromMockZkp()` are deleted
-- [ ] All 31 backend tests pass
-- [ ] UI claim banner still shows correctly (using path-specific result values)
+See [ZK_CIRCUITS.md](ZK_CIRCUITS.md) for the roadmap.
+
+**Goal**: replace the revealed balance value with a ZK proof that the committed balance
+satisfies the threshold predicate, so the backend (and any observer) learns only
+`balance > T` — not the balance itself.
+
+**Approach**: use the MPC-TLS transcript commitment as a public input to a ZK circuit
+that proves `balance > threshold` in zero knowledge. Candidate proving systems:
+
+- **Groth16 / Plonk** (via snarkjs or circom) — compact proofs, EVM-verifiable
+- **Halo2** — no trusted setup, used by PSE projects
+- **RISC Zero** — general-purpose zkVM, can prove arbitrary Rust programs including JSON parsing
+
+The MPC-TLS layer does not change. The revealed field becomes a private witness to the
+circuit rather than a disclosed value.

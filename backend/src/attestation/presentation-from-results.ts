@@ -3,28 +3,33 @@
  * Used when presentation is the new format { results: ProofResultItem[] }.
  */
 import { createHash } from "crypto";
-import type { DisclosedData, JsPresentation, MockZkpClaim, ProofResultItem, TransactionSummary } from "../types.js";
+import type { DisclosedData, JsPresentation, ProofResultItem, TransactionSummary } from "../types.js";
 
 function findResultByPath(results: ProofResultItem[], path: string): string | undefined {
-  // Preferred: newer plugins set params.path explicitly.
+  // Preferred: params.path is set explicitly (e.g. by newer plugin SDKs).
   const byParams = results.find(
     (x) => x.part === "BODY" && x.params?.path === path
   );
   if (byParams?.value !== undefined) return byParams.value;
 
-  // Fallback for legacy plugins that only emit raw BODY lines like:
-  // { part: "BODY", value: "\"balance\":25000" }
+  // Fallback: TLSNotary reveals raw JSON key-value fragments like
+  //   { part: "BODY", value: '"available":8618634.26' }
+  // The revealed text uses only the leaf key, not the full dotted path.
+  // Extract the leaf key (last non-empty segment after splitting on . [ ]).
+  const leafKey = path.split(/[\.\[\]]+/).filter(Boolean).pop() ?? path;
+
   const candidate = results.find(
-    (x) => x.part === "BODY" && typeof x.value === "string" && x.value.includes(`"${path}"`)
+    (x) => x.part === "BODY" && typeof x.value === "string" && x.value.includes(`"${leafKey}"`)
   );
   if (!candidate) return undefined;
 
   const text = candidate.value as string;
-  const re = new RegExp(`"${path}"\\s*:\\s*("([^"]*)"|[^,}\\s]+)`);
+  // Match: "leafKey": "string value" or "leafKey": numericValue
+  const re = new RegExp(`"${leafKey}"\\s*:\\s*("([^"]*)"|[^,}\\s]+)`);
   const match = text.match(re);
   if (!match) return undefined;
 
-  // If the value is a quoted string, return the inner part; otherwise return the token as-is.
+  // Quoted string → return the inner part; bare token → return as-is.
   if (match[2] !== undefined) return match[2];
   return match[1];
 }
@@ -78,20 +83,6 @@ export function disclosedDataFromBancolombiaPresentation(presentation: JsPresent
     balance,
     currency: String(currencyStr).trim(),
     account_id_hash,
-    transactions_summary: { months: [] },
-  };
-}
-
-/**
- * Convert a mock ZKP threshold claim to DisclosedData.
- * The exact balance is never disclosed; balance is set to the threshold value
- * when the claim is true (sufficient to pass the ≥ threshold verification check).
- */
-export function disclosedDataFromMockZkp(mockZkp: MockZkpClaim): DisclosedData {
-  return {
-    balance: mockZkp.balanceAboveThreshold ? mockZkp.threshold : 0,
-    currency: mockZkp.currency ?? 'COP',
-    account_id_hash: createHash('sha256').update('anonymous').digest('hex'),
     transactions_summary: { months: [] },
   };
 }

@@ -7,11 +7,11 @@ Sentinel is a cryptographic attestation system that enables users to prove their
 
 ## Key Features
 
-### 🔐 Zero-Knowledge Proofs of Banking Data
-- Prove balance and transaction history without sharing login credentials
-- Uses MPC-TLS to witness encrypted TLS handshakes between browser and bank
-- **Mock ZKP (current)**: threshold claim computed client-side (`balance > 1,000,000 COP`) — exact balance never sent to backend
-- **Selective disclosure (next release)**: TLSNotary path-level REVEAL so the backend receives only the specific JSON fields it needs, with no client-side trust assumption — see [SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)
+### 🔐 Cryptographic Proofs of Banking Data
+- Prove bank balance to a third party without exposing credentials or the exact figure
+- Uses MPC-TLS to witness encrypted TLS sessions between browser and bank
+- **Selective disclosure (current)**: TLSNotary path-level REVEAL handlers extract specific JSON fields (`balances.available`, `currency`, `number`, `name`) and commit them to the MPC-TLS transcript — balance comes from the verifier, not the client
+- **ZK circuits (next)**: replace the revealed balance value with a ZK proof of `balance > threshold`, so even the backend never learns the exact figure — see [SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)
 
 ### 🌍 Production-Ready Auditability
 - **Proof Origin Binding**: Attestations cryptographically bind to their originating TLS session
@@ -96,7 +96,7 @@ Signed Attestation returned to App
 | `mock-bank/` | HTTPS server with auth & account endpoints | 3443 |
 | `backend/` | Attestation REST API + verification logic | 3000 |
 | `app/` | Frontend for wallet + proof flow | 5173 |
-| `plugin-bancolombia/` | Live Bancolombia prover (mock ZKP threshold claim) | N/A |
+| `plugin-bancolombia/` | Live Bancolombia prover (selective disclosure via path REVEAL) | N/A |
 | `plugin/` | Sample TLSNotary plugin (mock bank) | N/A |
 | `plugin-sdk/` | SDK for building TLSNotary plugins | N/A |
 | `tlsn-common/` | Shared TLSNotary utilities | N/A |
@@ -247,7 +247,8 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 
 ## Documentation
 
-- **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** — **v2 priority**: replacing mock ZKP with cryptographic path-level REVEAL; background, diagnosis, and step-by-step implementation plan
+- **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** — Completed v2: path-level REVEAL handlers, proof format details, and bridge to v3
+- **[ZK_CIRCUITS.md](docs/ZK_CIRCUITS.md)** — v3 roadmap: ZK circuits to prove `balance > threshold` without revealing the balance; proof system options and integration sketch
 - **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Webhook architecture, Bancolombia E2E flow, and verifier setup
 - **[MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Manual test cases and troubleshooting
 - **[PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — Production deployment with PostgreSQL, backups, and compliance
@@ -288,27 +289,23 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 
 ## Project Status
 
-### ✅ v1 — Current Release
-- MPC-TLS integration with TLSNotary (live Bancolombia sessions)
-- **Mock ZKP**: client-side `balance > 1,000,000 COP` threshold claim; exact balance never leaves the browser
-- Webhook-based proof reporting with HMAC authentication and replay protection
-- secp256k1 ECDSA attestation signing
+### ✅ v2 — Current Release (Selective Disclosure)
+- Full MPC-TLS integration with TLSNotary against live Bancolombia sessions
+- **Cryptographic selective disclosure**: path-level REVEAL handlers extract `balances.available`, `currency`, `number`, and `name` — balance is committed to the MPC-TLS transcript by the verifier, not asserted by the client
+- Webhook-based proof delivery with HMAC authentication and replay protection (±5 min window)
+- secp256k1 ECDSA attestation signing with public-key discovery endpoint
+- Proof origin binding: attestation cryptographically linked to the originating TLS session transcript
 - Balance and transaction consistency checks
-- Public key discovery endpoint (`GET /notary/pubkey`)
-- Proof origin binding to TLS session transcripts
-- Comprehensive test coverage (31 tests)
-- UI claim banner: displays masked account and first name when threshold is met
+- 31 passing tests
+- UI claim banner derived from cryptographically-proven fields: **CARVAJAL (2030\*\*\*\*\*\*\*) has more than 1,000,000 COP**
 
-### 🔜 v2 — Next Release (Selective Disclosure)
+### 🔜 v3 — Next: ZK Circuits
 
-> **Priority item.** The mock ZKP approach trusts the client to compute the threshold correctly. The next release eliminates that trust by using TLSNotary's path-level REVEAL handlers so the backend receives only the specific JSON fields it needs — cryptographically bound to the MPC-TLS session.
+> **The remaining trust gap**: the verifier discloses the exact balance to the backend. A true zero-knowledge system should prove `balance > threshold` without revealing the figure at all.
 
-See **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** for the full implementation plan.
+The plan is to wrap the MPC-TLS transcript commitment in a ZK circuit so the backend receives only a succinct proof that the committed balance satisfies the predicate — not the balance itself. Candidate proving systems: **circom/snarkjs** (compact, EVM-verifiable), **Halo2** (no trusted setup, PSE-native), or **RISC Zero** (general-purpose zkVM).
 
-- Replace mock ZKP with TLSNotary path-specific `REVEAL` handlers (`data.accounts[0].balances.available`, `data.accounts[0].currency`, `data.accounts[0].number`)
-- Backend extracts balance from disclosed fields instead of trusting client claim
-- Remove `mockZkp` field from presentation; `disclosedDataFromBancolombiaPresentation()` becomes the primary path
-- End-to-end verification: balance field cryptographically bound to MPC-TLS transcript
+See **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** for the detailed transition plan.
 
 ### 🚧 Backlog
 - Support for additional bank endpoints (credit score, employment verification)

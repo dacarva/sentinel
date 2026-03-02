@@ -146,29 +146,27 @@ async function onClick(): Promise<void> {
         handlers: [
           { type: 'SENT', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
           { type: 'RECV', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
-          { type: 'RECV', part: 'BODY', action: 'REVEAL' } satisfies Handler,
+          {
+            type: 'RECV', part: 'BODY', action: 'REVEAL',
+            params: { type: 'json', path: 'data.accounts[0].balances.available' },
+          } satisfies Handler,
+          {
+            type: 'RECV', part: 'BODY', action: 'REVEAL',
+            params: { type: 'json', path: 'data.accounts[0].currency' },
+          } satisfies Handler,
+          {
+            type: 'RECV', part: 'BODY', action: 'REVEAL',
+            params: { type: 'json', path: 'data.accounts[0].number' },
+          } satisfies Handler,
+          {
+            type: 'RECV', part: 'BODY', action: 'REVEAL',
+            params: { type: 'json', path: 'data.accounts[0].name' },
+          } satisfies Handler,
         ],
       }
     );
 
-    // Mock ZKP: compute threshold comparison client-side
-    const bodyResult = balanceResp.results.find(
-      (r) => r.type === 'RECV' && r.part === 'BODY' && !r.params
-    );
-    let balanceAboveThreshold = false;
-    if (bodyResult?.value) {
-      try {
-        const body = JSON.parse(bodyResult.value as unknown as string);
-        const balance: number = body?.data?.accounts?.[0]?.balances?.available ?? 0;
-        balanceAboveThreshold = balance > 1_000_000;
-      } catch { /* ignore parse errors */ }
-    }
-
-    done(JSON.stringify({
-      results: balanceResp.results,
-      bank: 'bancolombia',
-      mockZkp: { balanceAboveThreshold, threshold: 1_000_000, currency: 'COP' },
-    }));
+    done(JSON.stringify({ results: balanceResp.results, bank: 'bancolombia' }));
   } catch (e) {
     setState('isRequestPending', false);
     const msg = e instanceof Error ? e.message : String(e);

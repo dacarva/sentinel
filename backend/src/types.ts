@@ -45,20 +45,11 @@ export interface ProofResultItem {
   value: string;
 }
 
-/** Client-side mock ZKP threshold claim (no exact balance disclosed). */
-export interface MockZkpClaim {
-  balanceAboveThreshold: boolean;
-  threshold: number;
-  currency?: string;
-}
-
 /** Presentation format from app when using execCode + prove() results (JS plugin). */
 export interface JsPresentation {
   results: ProofResultItem[];
   /** Optional bank identifier set by the plugin (e.g. 'bancolombia'). */
   bank?: string;
-  /** Client-side mock ZKP claim; when present, skips selective-disclosure parsing. */
-  mockZkp?: MockZkpClaim;
 }
 
 export interface NotaryKeyPair {
