@@ -1,0 +1,41 @@
+[
+  {
+    "id": "user-1",
+    "username": "user_pass",
+    "passwordHash": "$2b$10$/.2.MauPRK0mS4hwdcQI9OhqYbDR63EwQrac3gfoJB22A4ed.i9C6",
+    "address": "0x1111111111111111111111111111111111111111",
+    "accountId": "ACC-001",
+    "balance": 25000,
+    "currency": "USD",
+    "transactions": [
+      { "date": "2025-11-01", "amount": 100, "type": "credit", "description": "Deposit" },
+      { "date": "2025-11-15", "amount": 50, "type": "debit", "description": "Transfer" },
+      { "date": "2025-12-01", "amount": 200, "type": "credit", "description": "Deposit" },
+      { "date": "2025-12-10", "amount": 75, "type": "debit", "description": "Payment" },
+      { "date": "2026-01-05", "amount": 150, "type": "credit", "description": "Deposit" }
+    ]
+  },
+  {
+    "id": "user-2",
+    "username": "FailBalance",
+    "passwordHash": "$2b$10$/.2.MauPRK0mS4hwdcQI9OhqYbDR63EwQrac3gfoJB22A4ed.i9C6",
+    "address": "0x2222222222222222222222222222222222222222",
+    "accountId": "ACC-002",
+    "balance": 500,
+    "currency": "USD",
+    "transactions": []
+  },
+  {
+    "id": "user-3",
+    "username": "FailConsistency",
+    "passwordHash": "$2b$10$/.2.MauPRK0mS4hwdcQI9OhqYbDR63EwQrac3gfoJB22A4ed.i9C6",
+    "address": "0x3333333333333333333333333333333333333333",
+    "accountId": "ACC-003",
+    "balance": 5000,
+    "currency": "USD",
+    "transactions": [
+      { "date": "2025-11-01", "amount": 100, "type": "credit", "description": "Deposit" },
+      { "date": "2026-01-01", "amount": 50, "type": "debit", "description": "Transfer" }
+    ]
+  }
+]

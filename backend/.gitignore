@@ -1,0 +1,8 @@
+# Attestation storage (local dev)
+data/
+
+# Environment
+.env
+.env.local
+
+node_modules/

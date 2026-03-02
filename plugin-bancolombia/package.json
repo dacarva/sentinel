@@ -1,0 +1,29 @@
+{
+  "name": "@tlsn/ts-plugin-bancolombia",
+  "version": "0.1.0",
+  "description": "Bancolombia Sucursal Virtual prover plugin for TLSN extension",
+  "type": "module",
+  "main": "build/ts-plugin-bancolombia.js",
+  "scripts": {
+    "build": "node build-wrapper.cjs",
+    "clean": "rm -rf build",
+    "dev": "node build-wrapper.cjs --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "tlsn",
+    "plugin",
+    "bancolombia",
+    "zktls"
+  ],
+  "author": "Sentinel Team",
+  "license": "MIT",
+  "dependencies": {
+    "@tlsn/plugin-sdk": "*"
+  },
+  "devDependencies": {
+    "dotenv": "^17.3.1",
+    "esbuild": "^0.24.2",
+    "typescript": "^5.5.4"
+  }
+}

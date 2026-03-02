@@ -1,0 +1,7 @@
+node_modules
+__tests__
+*.md
+.env
+.env.*
+certs/server.key
+certs/server.cert
