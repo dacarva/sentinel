@@ -1,6 +1,6 @@
 # Sentinel — zkTLS Attestation Engine
 
-[![Tests](https://img.shields.io/badge/tests-31%20passing-brightgreen)]()
+[![Tests](https://img.shields.io/badge/tests-37%20passing-brightgreen)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
 Sentinel is a cryptographic attestation system that enables users to prove their financial data (bank balance, transaction history) to third parties without exposing credentials. It combines **MPC-TLS** (via [TLSNotary](https://tlsnotary.org)) with **secp256k1 signatures** and **webhook-based proofs** to create verifiable, auditable attestations.
@@ -10,8 +10,8 @@ Sentinel is a cryptographic attestation system that enables users to prove their
 ### 🔐 Cryptographic Proofs of Banking Data
 - Prove bank balance to a third party without exposing credentials or the exact figure
 - Uses MPC-TLS to witness encrypted TLS sessions between browser and bank
-- **Selective disclosure (current)**: TLSNotary path-level REVEAL handlers extract specific JSON fields (`balances.available`, `currency`, `number`, `name`) and commit them to the MPC-TLS transcript — balance comes from the verifier, not the client
-- **ZK circuits (next)**: replace the revealed balance value with a ZK proof of `balance > threshold`, so even the backend never learns the exact figure — see [SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)
+- **Selective disclosure (v2)**: TLSNotary path-level REVEAL handlers extract specific JSON fields (`balances.available`, `currency`, `number`, `name`) and commit them to the MPC-TLS transcript — balance comes from the verifier, not the client
+- **ZK threshold proofs (v3)**: The plugin exposes `balance_raw` to the browser app, which generates a Noir UltraHonk proof of `balance > threshold` in WASM — the backend verifies via `bb verify` and stores only the commitment, never the balance
 
 ### 🌍 Production-Ready Auditability
 - **Proof Origin Binding**: Attestations cryptographically bind to their originating TLS session
@@ -96,7 +96,8 @@ Signed Attestation returned to App
 | `mock-bank/` | HTTPS server with auth & account endpoints | 3443 |
 | `backend/` | Attestation REST API + verification logic | 3000 |
 | `app/` | Frontend for wallet + proof flow | 5173 |
-| `plugin-bancolombia/` | Live Bancolombia prover (selective disclosure via path REVEAL) | N/A |
+| `plugin-bancolombia/` | Live Bancolombia prover (selective disclosure + ZK balance proof) | N/A |
+| `circuit/` | Noir ZK circuit for balance threshold proof | N/A |
 | `plugin/` | Sample TLSNotary plugin (mock bank) | N/A |
 | `plugin-sdk/` | SDK for building TLSNotary plugins | N/A |
 | `tlsn-common/` | Shared TLSNotary utilities | N/A |
@@ -105,10 +106,11 @@ Signed Attestation returned to App
 
 ## Attestation Format
 
-### Example Attestation (with Proof Origin)
+### v3 ZK Attestation (balance threshold, no raw balance)
 ```json
 {
   "id": "att-12345",
+  "proof_type": "v3_zk",
   "user_address": "0x1111111111111111111111111111111111111111",
   "timestamp": "2026-02-25T10:30:00.000Z",
   "notary": {
@@ -116,24 +118,36 @@ Signed Attestation returned to App
     "signature": "c47e5767..."
   },
   "disclosed_data": {
-    "balance": 25000,
-    "currency": "USD",
+    "commitment": "a1b2c3d4...",
+    "threshold": 1000000,
+    "currency": "COP",
     "account_id_hash": "h...",
-    "transactions_summary": { "months": [...] }
-  },
-  "proof_origin": {
-    "server_name": "sentinel-d75o.onrender.com",
-    "session_id": "tlsn-sess-xyz",
-    "transcript_hash": "a1b2c3d4..."
+    "balance_proof": { "proof": "0x...", "publicInputs": { "commitment": "...", "threshold": 1000000 } }
   },
   "status": "verified"
 }
 ```
 
+### v2 Reveal Attestation (fallback)
+```json
+{
+  "id": "att-12345",
+  "proof_type": "v2_reveal",
+  "disclosed_data": {
+    "balance": 25000,
+    "currency": "USD",
+    "account_id_hash": "h...",
+    "transactions_summary": { "months": [...] }
+  },
+  "proof_origin": { "server_name": "...", "transcript_hash": "..." },
+  "status": "verified"
+}
+```
+
 **Key Fields:**
+- `proof_type`: `"v3_zk"` stores commitment + ZK proof; `"v2_reveal"` stores the exact balance
 - `notary.signature`: ECDSA secp256k1 signature covering id + user_address + timestamp + disclosed_data + proof_origin
 - `proof_origin`: Cryptographic binding to the originating TLS session (when webhook enabled)
-- `disclosed_data`: Redacted bank data (balance, not credentials)
 
 ---
 
@@ -248,7 +262,7 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 ## Documentation
 
 - **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** — Completed v2: path-level REVEAL handlers, proof format details, and bridge to v3
-- **[ZK_CIRCUITS.md](docs/ZK_CIRCUITS.md)** — v3 roadmap: ZK circuits to prove `balance > threshold` without revealing the balance; proof system options and integration sketch
+- **[ZK_CIRCUITS.md](docs/ZK_CIRCUITS.md)** — Completed v3: Noir UltraHonk balance threshold circuit, commitment scheme, bb.js proof format notes, and PEDERSEN binding roadmap (v3.1)
 - **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Webhook architecture, Bancolombia E2E flow, and verifier setup
 - **[MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Manual test cases and troubleshooting
 - **[PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — Production deployment with PostgreSQL, backups, and compliance
@@ -289,23 +303,21 @@ See [MANUAL_TESTING.md](docs/MANUAL_TESTING.md) for comprehensive manual test ca
 
 ## Project Status
 
-### ✅ v2 — Current Release (Selective Disclosure)
+### ✅ v2 — Selective Disclosure
 - Full MPC-TLS integration with TLSNotary against live Bancolombia sessions
 - **Cryptographic selective disclosure**: path-level REVEAL handlers extract `balances.available`, `currency`, `number`, and `name` — balance is committed to the MPC-TLS transcript by the verifier, not asserted by the client
 - Webhook-based proof delivery with HMAC authentication and replay protection (±5 min window)
 - secp256k1 ECDSA attestation signing with public-key discovery endpoint
 - Proof origin binding: attestation cryptographically linked to the originating TLS session transcript
-- Balance and transaction consistency checks
-- 31 passing tests
-- UI claim banner derived from cryptographically-proven fields: **CARVAJAL (2030\*\*\*\*\*\*\*) has more than 1,000,000 COP**
+- UI claim banner derived from cryptographically-proven fields
 
-### 🔜 v3 — Next: ZK Circuits
-
-> **The remaining trust gap**: the verifier discloses the exact balance to the backend. A true zero-knowledge system should prove `balance > threshold` without revealing the figure at all.
-
-The plan is to wrap the MPC-TLS transcript commitment in a ZK circuit so the backend receives only a succinct proof that the committed balance satisfies the predicate — not the balance itself. Candidate proving systems: **circom/snarkjs** (compact, EVM-verifiable), **Halo2** (no trusted setup, PSE-native), or **RISC Zero** (general-purpose zkVM).
-
-See **[SELECTIVE_DISCLOSURE.md](docs/SELECTIVE_DISCLOSURE.md)** for the detailed transition plan.
+### ✅ v3 — ZK Balance Threshold Proofs
+- **Zero-knowledge balance proofs**: browser generates a Noir UltraHonk proof that `balance > 1,000,000 COP` without exposing the exact figure
+- **Commitment scheme**: `sha256(balance_le_bytes || blinder)` — 16-byte random blinder prevents preimage attacks
+- **Browser proving**: `@noir-lang/noir_js` + `@aztec/bb.js` WASM (~5–30s, multi-threaded with COOP/COEP headers)
+- **Backend verification**: `bb verify -s ultra_honk` subprocess — proof body reconstructed with public inputs in the format `bb verify` expects
+- **Attestation**: stores `commitment` + `balance_proof`, never the raw balance value — `proof_type: "v3_zk"`
+- 37 passing tests
 
 ### 🚧 Backlog
 - Support for additional bank endpoints (credit score, employment verification)
@@ -326,6 +338,7 @@ From repo root:
 | `bun run sentinel:start` | Start Backend (HTTP 3000) |
 | `bun run app:dev` | Start App dev server (≈5173) |
 | `bun run plugin:build` | Build plugin and copy to app |
+| `bun run circuit:build` | Compile Noir circuit + generate vk + copy to app |
 | `bun test` | Run all tests |
 | `bun test --watch` | Run tests in watch mode |
 | `bun run --filter backend verify -- <id>` | Verify attestation by ID |

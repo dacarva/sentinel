@@ -143,50 +143,28 @@ export function Attest() {
         return
       }
       setStatus('proving')
-      const mocking = false
       let proof: PluginProof
 
-      if (!mocking)  {
-        console.log('[sentinel-app] calling window.tlsn.execCode()...')
-        const resultString = await window.tlsn.execCode(code)
-        console.log('[sentinel-app] execCode returned. type:', typeof resultString, 'value:', resultString)
+      const resultString = await window.tlsn.execCode(code)
 
-        if (resultString == null || typeof resultString !== 'string') {
-          setStatus('error')
-          setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
-          return
-        }
-        try {
-          proof = JSON.parse(resultString) as PluginProof
-        } catch {
-          console.error('[sentinel-app] JSON.parse failed on resultString:', resultString)
-          setStatus('error')
-          setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
-          return
-        }
-        if (!proof.results || !Array.isArray(proof.results)) {
-          console.error('[sentinel-app] proof.results missing or not array:', proof)
-          setStatus('error')
-          setMessage('Proof missing results array. Complete the full prove flow in the extension.')
-          return
-        }
-        console.log('[sentinel-app] proof', proof)
-        console.log('[sentinel-app] balance_raw present:', !!proof.balance_raw, 'value:', proof.balance_raw)
-        setThresholdClaim(extractThresholdClaim(proof))
+      if (resultString == null || typeof resultString !== 'string') {
+        setStatus('error')
+        setMessage('Plugin did not return proof data. Complete the flow in the extension (open Mock Bank, log in, click Prove) and wait until it finishes.')
+        return
       }
-      else {
-        const mockProof = {
-          results: [
-            { type: 'SENT', part: 'START_LINE', value: 'GET https://sentinel-d75o.onrender.com/account/balance HTTP/1.1' },
-            { type: 'RECV', part: 'START_LINE', value: 'HTTP/1.1 200 OK' },
-            { type: 'RECV', part: 'BODY', value: '"balance":25000' },
-            { type: 'RECV', part: 'BODY', value: '"currency":"USD"' },
-            { type: 'RECV', part: 'BODY', value: '"account_id":"ACC-001"' },
-          ],
-        }
-        proof = mockProof as PluginProof
-
+      try {
+        proof = JSON.parse(resultString) as PluginProof
+      } catch {
+        setStatus('error')
+        setMessage('Plugin returned invalid JSON. The extension may have returned an error message.')
+        return
       }
+      if (!proof.results || !Array.isArray(proof.results)) {
+        setStatus('error')
+        setMessage('Proof missing results array. Complete the full prove flow in the extension.')
+        return
+      }
+      setThresholdClaim(extractThresholdClaim(proof))
 
 
 
@@ -195,18 +173,13 @@ export function Attest() {
       // This keeps the raw balance from ever reaching the backend.
       let zkProof: Awaited<ReturnType<typeof generateBalanceProof>> | undefined
       if (proof.balance_raw) {
-        console.log('[sentinel-app] balance_raw found, entering ZK proof path:', proof.balance_raw)
         try {
           setMessage('Generating ZK proof…')
           zkProof = await generateBalanceProof(proof.balance_raw)
-          console.log('[sentinel-app] ZK proof generated successfully:', zkProof)
-        } catch (zkErr) {
+        } catch {
           // ZK proof generation failed — fall back to v2 reveal path
-          console.warn('[sentinel-app] ZK proof generation failed, falling back to v2:', zkErr)
           zkProof = undefined
         }
-      } else {
-        console.log('[sentinel-app] no balance_raw — skipping ZK path, using v2 reveal')
       }
 
       const presentation: { results: PluginProof['results']; bank?: string; zkProof?: typeof zkProof } = {

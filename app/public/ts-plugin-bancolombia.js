@@ -498,12 +498,10 @@ async function onClick() {
     return;
   }
   try {
-    console.log("[sentinel-plugin] onClick: starting prove, authorization present:", !!authorization, "sessionTracker present:", !!sessionTracker);
     const balanceHeaders = {
       ...buildBaseHeaders(authorization, deviceId, deviceInfo, clientIp, cookie, userAgent),
       "session-tracker": sessionTracker
     };
-    console.log("[sentinel-plugin] calling prove()...");
     const balanceResp = await prove(
       {
         url: BALANCE_URL,
@@ -545,16 +543,12 @@ async function onClick() {
         ]
       }
     );
-    console.log("[sentinel-plugin] prove() returned. results count:", balanceResp.results?.length);
-    console.log("[sentinel-plugin] results:", JSON.stringify(balanceResp.results));
     const byParams = balanceResp.results.find(
       (r) => r.type === "RECV" && r.part === "BODY" && r.params?.path?.endsWith("available")
     );
     const byFragment = balanceResp.results.find(
       (r) => r.type === "RECV" && r.part === "BODY" && typeof r.value === "string" && r.value.includes('"available"')
     );
-    console.log("[sentinel-plugin] byParams:", JSON.stringify(byParams));
-    console.log("[sentinel-plugin] byFragment:", JSON.stringify(byFragment));
     let balanceRaw;
     if (byParams?.value !== void 0) {
       balanceRaw = String(byParams.value);
@@ -562,13 +556,6 @@ async function onClick() {
       const match = byFragment.value.match(/"available"\s*:\s*([^,}\s"]+)/);
       if (match) balanceRaw = match[1];
     }
-    console.log("[sentinel-plugin] balanceRaw:", balanceRaw);
-    const donePayload = JSON.stringify({
-      results: balanceResp.results,
-      bank: "bancolombia",
-      ...balanceRaw !== void 0 ? { balance_raw: String(balanceRaw) } : {}
-    });
-    console.log("[sentinel-plugin] calling done() with payload length:", donePayload.length);
     done(JSON.stringify({
       results: balanceResp.results,
       bank: "bancolombia",

@@ -1,9 +1,17 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import wasm from 'vite-plugin-wasm'
+import topLevelAwait from 'vite-plugin-top-level-await'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), wasm(), topLevelAwait()],
+  // Prevent esbuild from pre-bundling WASM packages — they use
+  // `new URL('./file.wasm', import.meta.url)` internally which breaks when
+  // esbuild rewrites the module. The plugin handles WASM loading instead.
+  optimizeDeps: {
+    exclude: ['@aztec/bb.js', '@noir-lang/noir_js', '@noir-lang/noirc_abi', '@noir-lang/acvm_js'],
+  },
   server: {
     // Required for @aztec/bb.js (Barretenberg WASM) to use SharedArrayBuffer
     // and multi-threaded proving. Without these headers the prover falls back

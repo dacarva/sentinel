@@ -1,10 +1,13 @@
 # ZK Circuits — v3 Balance Threshold Proof
 
-## Status: In Progress / Partially Implemented
+## Status: Complete (v3)
 
-The balance threshold circuit is implemented and integrated into the backend.
-Browser-side proof generation is wired into the React app.
-The remaining gap (PEDERSEN TLS binding) is tracked as a TODO below.
+The balance threshold circuit is implemented and fully integrated end-to-end:
+- Browser generates Noir UltraHonk proofs via `@aztec/bb.js` WASM
+- Backend verifies proofs via `bb verify -s ultra_honk` subprocess
+- Attestations store `commitment` + `balance_proof`, never the raw balance value
+
+The remaining gap (PEDERSEN TLS binding) is tracked as a TODO below (v3.1).
 
 ---
 
@@ -68,23 +71,43 @@ The commitment binds the ZK proof to a specific balance value without revealing 
 
 ## Compiled artifacts
 
-Committed to repo at `circuit/target/`:
+`circuit/target/` is **gitignored** — artifacts must be built locally before running the backend or app.
+
+```bash
+bun run circuit:build   # nargo compile + bb write_vk + copy circuit.json to app/public/
+bun run circuit:test    # Run Noir unit tests
+```
+
+To regenerate the test fixture proof (balance=2M, threshold=1M):
+```bash
+cd circuit
+nargo execute
+bb prove -b target/balance_threshold.json -w target/balance_threshold.gz -o target/
+```
 
 | File | Purpose |
 |------|---------|
-| `balance_threshold.json` | Compiled circuit bytecode (nargo compile) |
-| `vk` | Verification key (bb write_vk) |
-| `proof` | Test fixture proof (balance=2M, threshold=1M) |
-| `proof.hex` | Same proof in hex (for copy-paste in tests) |
+| `circuit/target/balance_threshold.json` | Compiled circuit bytecode (nargo compile) |
+| `circuit/target/vk` | Verification key (bb write_vk) — required by backend |
+| `circuit/target/proof` | Test fixture proof |
+| `app/public/circuit.json` | Circuit served to browser (copy of bytecode+abi) |
 
-To recompile (requires Noir toolchain):
-```bash
-cd circuit
-nargo compile
-bb write_vk -b target/balance_threshold.json -o target/
-# Regenerate test fixture:
-nargo execute && bb prove -b target/balance_threshold.json -w target/balance_threshold.gz -o target/
+---
+
+## bb.js proof format notes
+
+`@aztec/bb.js` `UltraHonkBackend.generateProof()` returns **only the proof body** (14080 bytes = 440 × 32-byte field elements). The `bb verify` CLI expects the full format:
+
 ```
+[u32 BE: total element count]  ← 4 bytes
+[N × 32-byte field elements]   ← public inputs first, then proof body
+```
+
+Public inputs layout (33 elements total):
+- Elements 0–31: `commitment[i]` — each byte of the 32-byte commitment as its own 32-byte BE field element (right-aligned)
+- Element 32: `threshold` — u64 value as a 32-byte BE field element (last 8 bytes)
+
+The backend (`verifier/zkproof.ts`) reconstructs this full format before writing to the temp file for `bb verify`.
 
 ---
 
