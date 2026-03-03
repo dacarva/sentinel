@@ -543,7 +543,24 @@ async function onClick() {
         ]
       }
     );
-    done(JSON.stringify({ results: balanceResp.results, bank: "bancolombia" }));
+    const byParams = balanceResp.results.find(
+      (r) => r.type === "RECV" && r.part === "BODY" && r.params?.path?.endsWith("available")
+    );
+    const byFragment = balanceResp.results.find(
+      (r) => r.type === "RECV" && r.part === "BODY" && typeof r.value === "string" && r.value.includes('"available"')
+    );
+    let balanceRaw;
+    if (byParams?.value !== void 0) {
+      balanceRaw = String(byParams.value);
+    } else if (byFragment?.value !== void 0) {
+      const match = byFragment.value.match(/"available"\s*:\s*([^,}\s"]+)/);
+      if (match) balanceRaw = match[1];
+    }
+    done(JSON.stringify({
+      results: balanceResp.results,
+      bank: "bancolombia",
+      ...balanceRaw !== void 0 ? { balance_raw: String(balanceRaw) } : {}
+    }));
   } catch (e) {
     setState("isRequestPending", false);
     const msg = e instanceof Error ? e.message : String(e);

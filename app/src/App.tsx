@@ -1,5 +1,5 @@
-import { Attest } from './Attest'
 import { ConnectButton } from './ConnectButton'
+import { SentinelProofPage } from './SentinelProofPage'
 import './App.css'
 
 function App() {
@@ -7,12 +7,14 @@ function App() {
     <>
       <div className="app-header">
         <div className="app-header__brand">
-          <h1>zkCredit</h1>
-          <p className="app-tagline">Minimal client — prove bank data with TLSNotary</p>
+          <h1>Sentinel</h1>
+          <p className="app-tagline">
+            Pruebas criptográficas de saldo &gt; 1.000.000 sin exponer tu información.
+          </p>
         </div>
         <ConnectButton />
       </div>
-      <Attest />
+      <SentinelProofPage />
     </>
   )
 }

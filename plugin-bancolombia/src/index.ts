@@ -166,7 +166,39 @@ async function onClick(): Promise<void> {
       }
     );
 
-    done(JSON.stringify({ results: balanceResp.results, bank: 'bancolombia' }));
+    // Extract balance_raw so the app can generate a ZK proof in the browser.
+    // The TLSNotary plugin runs in QuickJS (no WASM support), so proof generation
+    // happens in the React app which runs in a real browser context.
+    //
+    // The extension may return REVEAL results without a `params` field — only a
+    // raw fragment like `value: '"available":8352628.1'` — so we try both.
+    const byParams = balanceResp.results.find(
+      (r) =>
+        r.type === 'RECV' &&
+        r.part === 'BODY' &&
+        (r.params as { path?: string } | undefined)?.path?.endsWith('available')
+    );
+    const byFragment = balanceResp.results.find(
+      (r) =>
+        r.type === 'RECV' &&
+        r.part === 'BODY' &&
+        typeof r.value === 'string' &&
+        (r.value as string).includes('"available"')
+    );
+
+    let balanceRaw: string | undefined;
+    if (byParams?.value !== undefined) {
+      balanceRaw = String(byParams.value);
+    } else if (byFragment?.value !== undefined) {
+      const match = (byFragment.value as string).match(/"available"\s*:\s*([^,}\s"]+)/);
+      if (match) balanceRaw = match[1];
+    }
+
+    done(JSON.stringify({
+      results: balanceResp.results,
+      bank: 'bancolombia',
+      ...(balanceRaw !== undefined ? { balance_raw: String(balanceRaw) } : {}),
+    }));
   } catch (e) {
     setState('isRequestPending', false);
     const msg = e instanceof Error ? e.message : String(e);
