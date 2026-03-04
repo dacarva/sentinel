@@ -11,18 +11,24 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import authRoutes from "./routes/auth";
 import accountRoutes from "./routes/account";
+import { detectLocale, t, type Locale } from "./i18n";
 
 const certsDir = join(import.meta.dir ?? "", "certs");
 const keyPath = join(certsDir, "server.key");
 const certPath = join(certsDir, "server.cert");
 
-const LOGIN_HTML = `
+function renderLoginHtml(locale: Locale): string {
+  const signedIn = JSON.stringify(t(locale, "login.script.signedIn"));
+  const loginFailed = JSON.stringify(t(locale, "login.script.loginFailed"));
+  const requestFailed = JSON.stringify(t(locale, "login.script.requestFailed"));
+
+  return `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${locale}">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mock Bank — zkCredit</title>
+  <title>${t(locale, "login.title")}</title>
   <style>
     body { font-family: system-ui, sans-serif; max-width: 320px; margin: 2rem auto; padding: 0 1rem; }
     h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
@@ -37,17 +43,24 @@ const LOGIN_HTML = `
   </style>
 </head>
 <body>
-  <h1>Mock Bank</h1>
-  <p>Sign in for zkCredit attestation. Use <code>user_pass</code> / <code>sentinel123</code> for testing.</p>
+  <h1>${t(locale, "login.heading")}</h1>
+  <p>${t(locale, "login.description").replace("user_pass", "<code>user_pass</code>").replace("sentinel123", "<code>sentinel123</code>")}</p>
   <form id="login" method="post" action="/auth/login">
-    <label for="username">Username</label>
+    <label for="username">${t(locale, "login.usernameLabel")}</label>
     <input id="username" name="username" type="text" value="user_pass" autocomplete="username" required />
-    <label for="password">Password</label>
-    <input id="password" name="password" type="password" placeholder="e.g. sentinel123" autocomplete="current-password" required />
-    <button type="submit">Sign in</button>
+    <label for="password">${t(locale, "login.passwordLabel")}</label>
+    <input id="password" name="password" type="password" placeholder="${t(
+      locale,
+      "login.passwordPlaceholder",
+    )}" autocomplete="current-password" required />
+    <button type="submit">${t(locale, "login.submit")}</button>
   </form>
   <div id="msg" class="msg" style="display:none;"></div>
   <script>
+    const MSG_SIGNED_IN = ${signedIn};
+    const MSG_LOGIN_FAILED = ${loginFailed};
+    const MSG_REQUEST_FAILED = ${requestFailed};
+
     document.getElementById('login').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
@@ -61,15 +74,15 @@ const LOGIN_HTML = `
         });
         const data = await r.json();
         if (r.ok) {
-          msg.className = 'msg ok'; msg.textContent = 'Signed in. You can continue in the TLSN extension.';
+          msg.className = 'msg ok'; msg.textContent = MSG_SIGNED_IN;
           if (data.token) {
             fetch('/account/balance', { headers: { 'Authorization': 'Bearer ' + data.token } }).catch(function() {});
           }
         } else {
-          msg.className = 'msg err'; msg.textContent = data.message || data.error || 'Login failed';
+          msg.className = 'msg err'; msg.textContent = data.message || data.error || MSG_LOGIN_FAILED;
         }
       } catch (err) {
-        msg.className = 'msg err'; msg.textContent = err.message || 'Request failed';
+        msg.className = 'msg err'; msg.textContent = err.message || MSG_REQUEST_FAILED;
       }
       msg.style.display = 'block';
     });
@@ -77,13 +90,15 @@ const LOGIN_HTML = `
 </body>
 </html>
 `;
+}
 
 export function startMockBank(port: number): Promise<{ stop: () => void }> {
   const app = express();
   app.use(express.json());
   app.use(cookieParser());
-  app.get("/", (_req, res) => {
-    res.type("html").send(LOGIN_HTML);
+  app.get("/", (req, res) => {
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    res.type("html").send(renderLoginHtml(locale));
   });
   app.use("/auth", authRoutes);
   app.use("/account", accountRoutes);

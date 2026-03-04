@@ -1,15 +1,16 @@
 import { useAttestFlow, PLUGIN_LABELS, PLUGIN_URLS, SENTINEL_API } from './useAttestFlow'
 import type { AttestStatus } from './useAttestFlow'
 import { ShieldCheck, Shield, Terminal, Wallet, Download, ChevronDown, AlertCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import './Attest.css'
 
 function statusLabel(status: AttestStatus): string {
-  if (status === 'connecting') return 'Loading TLSNotary plugin…'
-  if (status === 'proving') return 'Running MPC-TLS session…'
-  if (status === 'submitting') return 'Submitting proof to Sentinel…'
-  if (status === 'success') return 'Proof generated successfully'
-  if (status === 'error') return 'Error during proof generation'
-  return 'Ready to generate proof'
+  if (status === 'connecting') return 'attest.status.loadingPlugin'
+  if (status === 'proving') return 'attest.status.proving'
+  if (status === 'submitting') return 'attest.status.submitting'
+  if (status === 'success') return 'attest.status.success'
+  if (status === 'error') return 'attest.status.error'
+  return 'attest.status.ready'
 }
 
 export function Attest() {
@@ -30,6 +31,8 @@ export function Attest() {
     isConnected,
     handleProve,
   } = useAttestFlow()
+
+  const { t } = useTranslation('common')
 
   const busy = status === 'connecting' || status === 'proving' || status === 'submitting'
   const hasSuccess = status === 'success'
@@ -60,14 +63,16 @@ export function Attest() {
   terminalLines.push({
     key: 'plugin',
     tone: 'info',
-    text: `Selected plugin: ${PLUGIN_LABELS[selectedPlugin] ?? selectedPlugin}`,
+    text: t('attest.terminal.selectedPlugin', {
+      plugin: PLUGIN_LABELS[selectedPlugin] ?? selectedPlugin,
+    }),
   })
 
   if (status === 'idle') {
     terminalLines.push({
       key: 'idle',
       tone: 'info',
-      text: '[Ready] Awaiting TLSNotary extension and bank interaction…',
+      text: t('attest.terminal.ready'),
     })
   }
 
@@ -76,12 +81,12 @@ export function Attest() {
       {
         key: 'connect-1',
         tone: 'info',
-        text: '[1/3] Fetching TLSNotary plugin JavaScript…',
+        text: t('attest.terminal.connect1'),
       },
       {
         key: 'connect-2',
         tone: 'info',
-        text: '[2/3] Handing off execution to TLSNotary extension…',
+        text: t('attest.terminal.connect2'),
       },
     )
   }
@@ -91,12 +96,12 @@ export function Attest() {
       {
         key: 'prove-1',
         tone: 'info',
-        text: '[Proving] Capturing MPC-TLS transcript from bank endpoint…',
+        text: t('attest.terminal.prove1'),
       },
       {
         key: 'prove-2',
         tone: 'info',
-        text: '[Proving] Generating zero-knowledge proof for balance threshold…',
+        text: t('attest.terminal.prove2'),
       },
     )
   }
@@ -106,12 +111,12 @@ export function Attest() {
       {
         key: 'submit-1',
         tone: 'info',
-        text: '[Submitting] Posting proof payload to Sentinel backend /attest…',
+        text: t('attest.terminal.submit1'),
       },
       {
         key: 'submit-2',
         tone: 'info',
-        text: '[Submitting] Waiting for notary signature and attestation ID…',
+        text: t('attest.terminal.submit2'),
       },
     )
   }
@@ -120,7 +125,7 @@ export function Attest() {
     terminalLines.push({
       key: 'success',
       tone: 'success',
-      text: '[Done] Proof verified and attestation registered.',
+      text: t('attest.terminal.success'),
     })
   }
 
@@ -128,7 +133,7 @@ export function Attest() {
     terminalLines.push({
       key: 'error',
       tone: 'error',
-      text: message || 'An unknown error occurred while generating the proof.',
+      text: message || t('attest.terminal.unknownError'),
     })
   } else if (message) {
     terminalLines.push({
@@ -148,10 +153,10 @@ export function Attest() {
       {/* Hero */}
       <div className="text-center space-y-2">
         <h2 className="text-lg font-bold text-white">
-          Generate Financial Proof
+          {t('attest.hero.title')}
         </h2>
         <p className="text-xs text-zinc-400">
-          Developer view of the raw Sentinel attestation payloads and TLSNotary proof exchange.
+          {t('attest.hero.subtitle')}
         </p>
       </div>
 
@@ -162,13 +167,13 @@ export function Attest() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
               <ShieldCheck className="h-4 w-4" />
             </span>
-            <div className="text-sm font-semibold">Bank Connection</div>
+            <div className="text-sm font-semibold">{t('attest.bankConnection.title')}</div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                Select Financial Institution
+                {t('attest.bankConnection.selectInstitution')}
               </label>
               <div className="relative">
                 <select
@@ -191,7 +196,7 @@ export function Attest() {
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                Wallet / Destination Address
+                {t('attest.bankConnection.walletLabel')}
               </label>
               <input
                 type="text"
@@ -212,7 +217,7 @@ export function Attest() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-300">
               <Shield className="h-4 w-4" />
             </span>
-            <div className="text-sm font-semibold">Security Credentials</div>
+            <div className="text-sm font-semibold">{t('attest.security.title')}</div>
           </div>
 
           {/* Yellow shield callout */}
@@ -222,11 +227,10 @@ export function Attest() {
             </div>
             <div className="space-y-1">
               <div className="text-xs font-semibold text-amber-300">
-                End-to-end privacy protected
+                {t('attest.security.calloutTitle')}
               </div>
               <p className="text-[11px] leading-relaxed text-zinc-200">
-                Sentinel uses zkTLS. Your bank credentials stay local to the TLSNotary extension;
-                only the zero-knowledge proof and minimal disclosed facts are sent to the backend.
+                {t('attest.security.calloutBody')}
               </p>
             </div>
           </div>
@@ -234,7 +238,7 @@ export function Attest() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                Bank Username (optional)
+                {t('attest.security.usernameLabel')}
               </label>
               <input
                 type="text"
@@ -247,7 +251,7 @@ export function Attest() {
             </div>
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-                Bank Password (optional)
+                {t('attest.security.passwordLabel')}
               </label>
               <input
                 type="password"
@@ -270,7 +274,7 @@ export function Attest() {
           {busy && (
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/40 border-t-transparent" />
           )}
-          {statusLabel(status)}
+          {t(statusLabel(status))}
         </button>
       </form>
 
@@ -286,10 +290,10 @@ export function Attest() {
             </div>
             <div className="space-y-1">
               <h3 className="text-base font-semibold text-white">
-                Proof Generated Successfully
+                {t('attest.success.title')}
               </h3>
               <p className="text-xs text-zinc-400">
-                Your financial credentials have been cryptographically verified by Sentinel.
+                {t('attest.success.subtitle')}
               </p>
             </div>
           </div>
@@ -303,21 +307,21 @@ export function Attest() {
               <div className="flex items-start justify-between gap-3">
                 <div className="space-y-1">
                   <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-zinc-500">
-                    Sentinel Protocol
+                    {t('attest.success.protocolLabel')}
                   </p>
                   <h4 className="text-sm font-semibold text-zinc-100">
-                    Financial Passport Stamp
+                    {t('attest.success.passportStamp')}
                   </h4>
                 </div>
                 <div className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                  Verified
+                  {t('attest.success.verifiedPill')}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-2 text-xs">
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                    Institution
+                    {t('attest.success.institutionLabel')}
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-zinc-100">
                     {institution}
@@ -325,11 +329,13 @@ export function Attest() {
                 </div>
                 <div>
                   <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                    Criteria
+                    {t('attest.success.criteriaLabel')}
                   </p>
                   <p className="mt-0.5 text-[11px] font-medium text-zinc-100">
-                    Balance &gt; {threshold.toLocaleString('es-CO')}{' '}
-                    {currency}
+                    {t('attest.success.criteriaValue', {
+                      threshold: threshold.toLocaleString('es-CO'),
+                      currency,
+                    })}
                   </p>
                 </div>
               </div>
@@ -340,12 +346,14 @@ export function Attest() {
                     <span className="font-semibold text-white">
                       {thresholdClaim.firstName}
                     </span>{' '}
-                    ({thresholdClaim.maskedAccount}) satisfies the configured balance
-                    threshold in {thresholdClaim.currency}.
+                    {t('attest.success.thresholdText', {
+                      account: thresholdClaim.maskedAccount,
+                      currency: thresholdClaim.currency,
+                    })}
                   </p>
                 )}
                 <p className="text-[9px] font-bold uppercase tracking-widest text-zinc-500">
-                  Unique Proof Hash
+                  {t('attest.success.proofHashLabel')}
                 </p>
                 <p className="mt-1 rounded bg-black/60 p-2 text-[10px] font-mono text-zinc-300 break-all">
                   {proofHash}
@@ -364,7 +372,7 @@ export function Attest() {
               }}
             >
               <Wallet className="h-4 w-4" />
-              Use in Aave
+              {t('attest.success.useInAave')}
             </button>
             <button
               type="button"
@@ -376,7 +384,7 @@ export function Attest() {
               }}
             >
               <Download className="h-4 w-4" />
-              Download Certificate
+              {t('attest.success.downloadCertificate')}
             </button>
           </div>
         </div>
@@ -392,7 +400,7 @@ export function Attest() {
           </div>
           <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-400">
             <Terminal className="h-3 w-3" />
-            Live Proof Status
+            {t('attest.terminal.title')}
           </div>
         </div>
         <div className="terminal-text space-y-1 px-4 py-3 text-[11px] leading-relaxed">
@@ -439,14 +447,14 @@ export function Attest() {
             </div>
             <div className="flex flex-wrap items-center gap-2 text-[10px] text-zinc-500">
               <span className="font-mono">
-                Backend:
+                {t('attest.debug.backendLabel')}
                 {' '}
                 <code className="rounded bg-zinc-900 px-1 py-0.5">
                   {SENTINEL_API}
                 </code>
               </span>
               <span className="font-mono">
-                Plugin:
+                {t('attest.debug.pluginLabel')}
                 {' '}
                 <code className="rounded bg-zinc-900 px-1 py-0.5">
                   {PLUGIN_URLS[selectedPlugin]}

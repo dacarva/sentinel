@@ -2,35 +2,41 @@ import { useAttestFlow } from './useAttestFlow'
 import type { AttestStatus, FullAttestation, ThresholdClaim } from './useAttestFlow'
 import { PLUGIN_LABELS } from './useAttestFlow'
 import { CheckCircle2, ChevronDown, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 function StatusLabel({ status }: { status: AttestStatus }) {
-  if (status === 'connecting') return <>Connecting to bank portal...</>
-  if (status === 'proving') return <>Generating Zero-Knowledge Proof...</>
-  if (status === 'submitting') return <>Submitting verification to Sentinel...</>
-  if (status === 'success') return <>Proof mathematically verified.</>
-  if (status === 'error') return <>An error occurred during proof generation.</>
-  return <>Ready to generate proof.</>
+  const { t } = useTranslation('common')
+  if (status === 'connecting') return <>{t('wizard.status.connecting')}</>
+  if (status === 'proving') return <>{t('wizard.status.proving')}</>
+  if (status === 'submitting') return <>{t('wizard.status.submitting')}</>
+  if (status === 'success') return <>{t('wizard.status.success')}</>
+  if (status === 'error') return <>{t('wizard.status.error')}</>
+  return <>{t('wizard.status.ready')}</>
 }
 
 function BalanceSummary({ claim }: { claim: ThresholdClaim }) {
+  const { t } = useTranslation('common')
   return (
     <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 space-y-4">
       <div className="flex items-center gap-2 text-emerald-400 font-bold">
         <CheckCircle2 className="w-5 h-5" />
-        Verification Successful
+        {t('wizard.summary.title')}
       </div>
       <p className="text-zinc-300 text-sm leading-relaxed">
-        <strong className="text-white">{claim.firstName}</strong> ({claim.maskedAccount}) has a balance exceeding{' '}
-        <strong className="text-white">1,000,000 {claim.currency}</strong> in the verified account.
+        <strong className="text-white">{claim.firstName}</strong>{' '}
+        {t('wizard.summary.body', {
+          account: claim.maskedAccount,
+          currency: claim.currency,
+        })}
       </p>
       <ul className="space-y-2 text-xs text-zinc-500">
         <li className="flex gap-2">
           <span>•</span>
-          Source cryptographically verified directly from institution.
+          {t('wizard.summary.pointSource')}
         </li>
         <li className="flex gap-2">
           <span>•</span>
-          Exact balance remains strictly confidential.
+          {t('wizard.summary.pointPrivacy')}
         </li>
       </ul>
     </div>
@@ -53,6 +59,7 @@ function AttestationDetailCard({ status, message, result, attestation }: {
   result: unknown
   attestation: FullAttestation | null
 }) {
+  const { t } = useTranslation('common')
   if (!message && !result && !attestation) return null
 
   const bankInfo = extractBankLabel(attestation?.proof_origin?.server_name)
@@ -70,21 +77,26 @@ function AttestationDetailCard({ status, message, result, attestation }: {
           ? 'bg-emerald-500/10 text-emerald-400'
           : 'bg-blue-500/10 text-blue-400'
           }`}>
-          {attestation?.status === 'verified' ? 'Verified' : 'Pending'}
+          {attestation?.status === 'verified' ? t('wizard.detail.verified') : t('wizard.detail.pending')}
         </div>
       </div>
 
       <div className="pt-2 border-t border-white/5">
-        <div className="text-[11px] text-zinc-500 uppercase font-bold tracking-widest mb-2">Certificate Output</div>
+        <div className="text-[11px] text-zinc-500 uppercase font-bold tracking-widest mb-2">
+          {t('wizard.detail.certificateOutput')}
+        </div>
         <div className="text-sm text-zinc-300">
-          Balance proved &gt; <strong className="text-white">{threshold.toLocaleString('es-CO')} {currency}</strong>
+          {t('wizard.detail.balanceProved', {
+            threshold: threshold.toLocaleString('es-CO'),
+            currency,
+          })}
         </div>
       </div>
 
       {result ? (
         <details className="group border-t border-white/5 pt-2">
           <summary className="flex items-center justify-between text-[11px] font-bold text-zinc-500 cursor-pointer hover:text-zinc-300 transition-colors">
-            RAW CRYPTOGRAPHIC PAYLOAD
+            {t('wizard.detail.rawPayload')}
             <ChevronDown className="w-3 h-3 group-open:rotate-180 transition-transform" />
           </summary>
           <pre className="mt-3 p-3 bg-black rounded-lg text-[10px] text-zinc-400 overflow-x-auto border border-white/5">
@@ -98,6 +110,7 @@ function AttestationDetailCard({ status, message, result, attestation }: {
 
 export function SentinelProofPage() {
   const flow = useAttestFlow()
+  const { t } = useTranslation('common')
   const {
     userAddress, setUserAddress, username, setUsername,
     password, setPassword, selectedPlugin, setSelectedPlugin,
@@ -119,8 +132,8 @@ export function SentinelProofPage() {
         </div>
 
         <div className="space-y-2 mb-8">
-          <h2 className="text-2xl font-bold text-white">Generate Compliance Proof</h2>
-          <p className="text-zinc-400 text-sm">Securely verify your bank data without revealing credentials.</p>
+          <h2 className="text-2xl font-bold text-white">{t('wizard.hero.title')}</h2>
+          <p className="text-zinc-400 text-sm">{t('wizard.hero.subtitle')}</p>
         </div>
 
         <form
@@ -128,7 +141,9 @@ export function SentinelProofPage() {
           onSubmit={(e) => { e.preventDefault(); void handleProve(); }}
         >
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Institution Plugin</label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+              {t('wizard.form.institutionPlugin')}
+            </label>
             <select
               className="w-full bg-brand-base border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none transition-colors"
               value={selectedPlugin}
@@ -142,7 +157,9 @@ export function SentinelProofPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Wallet Address</label>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+              {t('wizard.form.walletAddress')}
+            </label>
             <input
               className="w-full bg-brand-base border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none transition-colors disabled:opacity-50"
               type="text"
@@ -156,7 +173,9 @@ export function SentinelProofPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Portal User</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                {t('wizard.form.portalUser')}
+              </label>
               <input
                 className="w-full bg-brand-base border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none transition-colors"
                 type="text"
@@ -167,7 +186,9 @@ export function SentinelProofPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Portal Pass</label>
+              <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                {t('wizard.form.portalPass')}
+              </label>
               <input
                 className="w-full bg-brand-base border border-white/5 rounded-xl px-4 py-3 text-sm focus:border-brand-accent outline-none transition-colors"
                 type="password"
@@ -185,9 +206,9 @@ export function SentinelProofPage() {
             className="w-full bg-brand-accent hover:bg-brand-accent-hover disabled:bg-zinc-800 text-white font-bold py-4 rounded-xl shadow-lg shadow-brand-accent/20 transition-all flex items-center justify-center gap-3 active:scale-[0.98]"
           >
             {busy && <Loader2 className="w-5 h-5 animate-spin" />}
-            {status === 'idle' || status === 'error' || status === 'success'
-              ? 'Generate Cryptographic Proof'
-              : <StatusLabel status={status} />}
+          {status === 'idle' || status === 'error' || status === 'success'
+            ? t('wizard.form.submit')
+            : <StatusLabel status={status} />}
           </button>
         </form>
 

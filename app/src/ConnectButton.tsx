@@ -44,7 +44,7 @@ export function ConnectButton() {
         onClick={() => firstConnector && connect({ connector: firstConnector })}
       >
         <Wallet className="w-4 h-4" />
-        {isConnecting ? 'Connecting…' : 'Connect Wallet'}
+        <span className="hidden sm:inline">{isConnecting ? 'Connecting…' : 'Connect Wallet'}</span>
       </button>
       {error && (
         <p className="absolute top-full right-0 mt-2 whitespace-nowrap text-[10px] text-red-400 bg-red-950/50 px-2 py-1 rounded border border-red-900/50" role="alert">

@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight, ChevronRight, Lock, EyeOff, Info } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function HeroSection() {
+    const { t } = useTranslation('common')
+
     return (
         <div className="w-full flex justify-center">
             <div className="w-full flex-col flex max-w-[1440px]">
@@ -14,19 +17,22 @@ export function HeroSection() {
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white dark:bg-white/5 rounded-full mb-8 border border-grid-color dark:border-white/10">
                                 <div className="w-2 h-2 rounded-full bg-primary-light dark:bg-trust-blue animate-pulse"></div>
                                 <span className="text-xs font-mono font-medium text-primary-light dark:text-primary uppercase tracking-wider">
-                                    Sentinel Protocol v1.0
+                                    {t('hero.tagline')}
                                 </span>
                             </div>
 
                             {/* Headline */}
                             <h1 className="text-5xl md:text-6xl lg:text-[72px] leading-[1.05] font-semibold text-text-body-light dark:text-white tracking-tighter-swiss mb-8">
-                                Verify the <span className="text-trust-blue">Fact</span>. <br />
-                                Hide the Data.
+                                {t('hero.headlinePart1')}
+                                <span className="text-trust-blue">{t('hero.headlineEmphasis')}</span>
+                                {t('hero.headlinePart2')}
+                                <br />
+                                {t('hero.headlineSecondLine')}
                             </h1>
 
                             {/* Subhead */}
                             <p className="text-lg md:text-xl text-text-muted leading-relaxed mb-10 max-w-lg font-normal">
-                                The world’s first Proof Engine powered by zkTLS. Prove your bank balance, income, or credentials directly from the source—without revealing your identity or private history.
+                                {t('hero.subhead')}
                             </p>
 
                             {/* CTA Actions */}
@@ -35,21 +41,23 @@ export function HeroSection() {
                                     to="/app"
                                     className="bg-primary-light dark:bg-primary hover:-translate-y-[2px] transition-all duration-200 text-white text-base font-bold px-8 h-14 rounded-sm flex items-center justify-center gap-2 min-w-[200px] shadow-hard hover:shadow-hard-hover"
                                 >
-                                    <span>Generate Your First Proof</span>
+                                    <span>{t('hero.primaryCta')}</span>
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
                                 <a
                                     className="group flex items-center gap-2 px-6 h-14 text-text-body-light dark:text-white font-medium border border-transparent hover:bg-surface-light dark:hover:bg-gray-800 rounded-sm transition-colors"
                                     href="#how-it-works"
                                 >
-                                    <span>Explore the Trust Architecture</span>
+                                    <span>{t('hero.secondaryCta')}</span>
                                     <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </a>
                             </div>
 
                             {/* Trust Badges */}
                             <div className="mt-16 pt-8 border-t border-grid-color dark:border-white/10 flex gap-6 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-                                <div className="h-8 flex items-center text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-widest">Backed By</div>
+                                <div className="h-8 flex items-center text-xs font-bold text-text-muted dark:text-gray-400 uppercase tracking-widest">
+                                    {t('hero.backedBy')}
+                                </div>
                                 <div className="h-8 flex items-center">
                                     <div className="w-24 h-6 bg-gray-200 dark:bg-white/10 rounded animate-pulse" title="Investor Logo Placeholder"></div>
                                 </div>
@@ -98,8 +106,10 @@ export function HeroSection() {
                             <div className="flex items-start gap-3">
                                 <Info className="w-4 h-4 text-trust-blue shrink-0 mt-0.5" />
                                 <p className="text-xs text-text-muted font-mono leading-tight">
-                                    <strong className="block mb-1 text-text-body-light dark:text-trust-blue">Sentinel Architecture</strong>
-                                    Visual representation of the cryptographic separation between verification and data revelation.
+                                    <strong className="block mb-1 text-text-body-light dark:text-trust-blue">
+                                        {t('hero.visualTitle')}
+                                    </strong>
+                                    {t('hero.visualCaption')}
                                 </p>
                             </div>
                         </div>

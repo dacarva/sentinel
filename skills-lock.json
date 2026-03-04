@@ -20,6 +20,10 @@
       "source": "wshobson/agents",
       "sourceType": "github",
       "computedHash": "7a28cb13b9fa427ae39c943ceb25d81f8135f848e1a1d434dc86a75926f51035"
+    "i18n-localization": {
+      "source": "sickn33/antigravity-awesome-skills",
+      "sourceType": "github",
+      "computedHash": "5d0e3b753d051d24e4688497947e5c018b54a889559ce50f61bb329c1d1e1848"
     },
     "landing-page-copywriter": {
       "source": "onewave-ai/claude-skills",

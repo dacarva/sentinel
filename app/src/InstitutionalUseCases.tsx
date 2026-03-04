@@ -11,18 +11,24 @@ import {
     ArrowRight,
     Network
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function InstitutionalUseCases() {
+    const { t } = useTranslation('common')
     return (
         <div id="use-cases" className="w-full bg-white dark:bg-[#050816] transition-colors font-display">
             {/* Andrés' Journey: Transformation Section */}
             <section className="py-24 px-6 lg:px-20 bg-white dark:bg-[#050816] dark:bg-grid-pattern-dark border-b border-black/5 dark:border-white/10">
                 <div className="max-w-7xl mx-auto">
                     <div className="text-center mb-16 space-y-4">
-                        <h2 className="text-[#114cd4] dark:text-[#6366F1] font-mono text-[10px] uppercase tracking-[0.2em] mb-4 block">Institutional Infrastructure</h2>
-                        <h3 className="text-4xl md:text-6xl font-bold text-[#111827] dark:text-white mb-6 tracking-[-0.02em]">Verification at the <br />Speed of Software</h3>
+                        <h2 className="text-[#114cd4] dark:text-[#6366F1] font-mono text-[10px] uppercase tracking-[0.2em] mb-4 block">
+                            {t('institutional.tagline')}
+                        </h2>
+                        <h3 className="text-4xl md:text-6xl font-bold text-[#111827] dark:text-white mb-6 tracking-[-0.02em]">
+                            {t('institutional.headline')}
+                        </h3>
                         <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-lg leading-relaxed font-normal">
-                            Sentinel eliminates the "PDF Integrity Crisis." Replace expensive manual reviews with cryptographic certainty for M&A, Lending, and Compliance.
+                            {t('institutional.body')}
                         </p>
                     </div>
 
@@ -30,8 +36,12 @@ export function InstitutionalUseCases() {
                         {/* The Old Way - Subdued */}
                         <div className="bg-white dark:bg-[#0A0E23] border border-slate-200 dark:border-white/10 p-10 relative rounded-none shadow-sm">
                             <div className="flex items-center justify-between mb-10">
-                                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/60 text-[10px] font-mono uppercase tracking-widest">The Old Way</span>
-                                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono">PDF ERA</span>
+                                <span className="px-3 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/60 text-[10px] font-mono uppercase tracking-widest">
+                                    {t('institutional.oldWayLabel')}
+                                </span>
+                                <span className="text-slate-400 dark:text-slate-500 text-[10px] font-mono">
+                                    {t('institutional.oldWayEra')}
+                                </span>
                             </div>
                             <div className="space-y-8">
                                 <div className="flex gap-6">
@@ -39,8 +49,12 @@ export function InstitutionalUseCases() {
                                         <FileUp className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Insecure Documents</h4>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">Partners share bank statements and tax filings as PDFs that are easily faked or tampered with.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.oldInsecureTitle')}
+                                        </h4>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">
+                                            {t('institutional.oldInsecureBody')}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex gap-6">
@@ -48,8 +62,12 @@ export function InstitutionalUseCases() {
                                         <Eye className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Maximum Exposure</h4>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">M&A due diligence forces companies to reveal every transaction, customer name, and cap table detail prematurely.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.oldExposureTitle')}
+                                        </h4>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">
+                                            {t('institutional.oldExposureBody')}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex gap-6">
@@ -57,8 +75,12 @@ export function InstitutionalUseCases() {
                                         <Hourglass className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Manual Verification</h4>
-                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">Underwriters and analysts spend weeks manually verifying data across disconnected silos.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.oldManualTitle')}
+                                        </h4>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-normal">
+                                            {t('institutional.oldManualBody')}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -72,8 +94,12 @@ export function InstitutionalUseCases() {
                         {/* The Sentinel Way - Prominent */}
                         <div className="bg-indigo-50/50 dark:bg-[#6366F1] border-2 border-[#114cd4] dark:border-[#6366F1] p-10 relative shadow-2xl scale-105 z-10 rounded-none overflow-hidden">
                             <div className="flex items-center justify-between mb-10">
-                                <span className="px-3 py-1 bg-[#114cd4] dark:bg-white/20 border border-[#114cd4] dark:border-white/20 text-white text-[10px] font-mono uppercase tracking-widest font-bold">The Sentinel Way</span>
-                                <span className="text-[#114cd4]/70 dark:text-white/70 text-[10px] font-mono font-bold uppercase">Source Truth</span>
+                                <span className="px-3 py-1 bg-[#114cd4] dark:bg-white/20 border border-[#114cd4] dark:border-white/20 text-white text-[10px] font-mono uppercase tracking-widest font-bold">
+                                    {t('institutional.sentinelWayLabel')}
+                                </span>
+                                <span className="text-[#114cd4]/70 dark:text-white/70 text-[10px] font-mono font-bold uppercase">
+                                    {t('institutional.sentinelWaySub')}
+                                </span>
                             </div>
                             <div className="space-y-8">
                                 <div className="flex gap-6">
@@ -81,8 +107,12 @@ export function InstitutionalUseCases() {
                                         <ShieldCheck className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Cryptographic Origin</h4>
-                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">Data is verified directly from the TLS session. No PDFs, no fakes. Just source truth.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.sentinelOriginTitle')}
+                                        </h4>
+                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">
+                                            {t('institutional.sentinelOriginBody')}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex gap-6">
@@ -90,8 +120,12 @@ export function InstitutionalUseCases() {
                                         <Lock className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Zero-Knowledge M&A</h4>
-                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">Prove assets, runway, and compliance without revealing specific transaction details to competitors.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.sentinelZkTitle')}
+                                        </h4>
+                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">
+                                            {t('institutional.sentinelZkBody')}
+                                        </p>
                                     </div>
                                 </div>
                                 <div className="flex gap-6">
@@ -99,8 +133,12 @@ export function InstitutionalUseCases() {
                                         <Zap className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">Instant Settlement</h4>
-                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">Programmatic verification allows for instant approval of loans, ventures, and compliance checks.</p>
+                                        <h4 className="text-[#111827] dark:text-white font-bold text-lg mb-2">
+                                            {t('institutional.sentinelInstantTitle')}
+                                        </h4>
+                                        <p className="text-slate-600 dark:text-white/80 text-sm leading-relaxed font-normal">
+                                            {t('institutional.sentinelInstantBody')}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -118,8 +156,12 @@ export function InstitutionalUseCases() {
             <section className="py-32 px-6 md:px-20 bg-white dark:bg-[#050816] border-t border-black/5 dark:border-white/10">
                 <div className="max-w-7xl mx-auto">
                     <div className="mb-16">
-                        <h3 className="text-4xl font-bold text-[#111827] dark:text-white mb-6 tracking-[-0.02em]">B2B Trust Protocol</h3>
-                        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl leading-relaxed font-normal">Scaling selective revelation across high-stakes financial environments.</p>
+                        <h3 className="text-4xl font-bold text-[#111827] dark:text-white mb-6 tracking-[-0.02em]">
+                            {t('institutional.b2bHeadline')}
+                        </h3>
+                        <p className="text-slate-500 dark:text-slate-400 text-lg max-w-2xl leading-relaxed font-normal">
+                            {t('institutional.b2bBody')}
+                        </p>
                     </div>
                     <div className="grid md:grid-cols-3 gap-6">
                         {/* Use Case 1 */}
@@ -127,13 +169,15 @@ export function InstitutionalUseCases() {
                             <div className="w-12 h-12 bg-[#114cd4]/5 dark:bg-white/5 flex items-center justify-center mb-8 text-[#114cd4] dark:text-[#6366F1]">
                                 <Landmark className="w-7 h-7" />
                             </div>
-                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">M&A Exploratory</h4>
+                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">
+                                {t('institutional.useCase1Title')}
+                            </h4>
                             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-10 flex-grow font-normal">
-                                Prove your company's assets and runway to potential buyers without sharing sensitive customer data or specific cap table details.
+                                {t('institutional.useCase1Body')}
                             </p>
                             <div>
                                 <a className="text-[#114cd4] dark:text-[#6366F1] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center group-hover:gap-2 transition-all no-underline" href="#">
-                                    View M&A Protocol <ArrowRight className="w-4 h-4 ml-2" />
+                                    {t('institutional.useCase1Cta')} <ArrowRight className="w-4 h-4 ml-2" />
                                 </a>
                             </div>
                         </div>
@@ -142,13 +186,15 @@ export function InstitutionalUseCases() {
                             <div className="w-12 h-12 bg-[#114cd4]/5 dark:bg-white/5 flex items-center justify-center mb-8 text-[#114cd4] dark:text-[#6366F1]">
                                 <Fingerprint className="w-7 h-7" />
                             </div>
-                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">Compliant DeFi</h4>
+                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">
+                                {t('institutional.useCase2Title')}
+                            </h4>
                             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-10 flex-grow font-normal">
-                                Institutions can access special liquidity pools by proving they meet specific solvency and compliance requirements without revealing their full balance sheets.
+                                {t('institutional.useCase2Body')}
                             </p>
                             <div>
                                 <a className="text-[#114cd4] dark:text-[#6366F1] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center group-hover:gap-2 transition-all no-underline" href="#">
-                                    AAVE Specs <ArrowRight className="w-4 h-4 ml-2" />
+                                    {t('institutional.useCase2Cta')} <ArrowRight className="w-4 h-4 ml-2" />
                                 </a>
                             </div>
                         </div>
@@ -157,13 +203,15 @@ export function InstitutionalUseCases() {
                             <div className="w-12 h-12 bg-[#114cd4]/5 dark:bg-white/5 flex items-center justify-center mb-8 text-[#114cd4] dark:text-[#6366F1]">
                                 <ShieldPlus className="w-7 h-7" />
                             </div>
-                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">Healthcare Claims</h4>
+                            <h4 className="text-xl font-bold text-[#111827] dark:text-white mb-4">
+                                {t('institutional.useCase3Title')}
+                            </h4>
                             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed mb-10 flex-grow font-normal">
-                                Prove specific medical conditions or insurance eligibility to providers without revealing your entire health history.
+                                {t('institutional.useCase3Body')}
                             </p>
                             <div>
                                 <a className="text-[#114cd4] dark:text-[#6366F1] font-bold text-[10px] uppercase tracking-[0.2em] flex items-center group-hover:gap-2 transition-all no-underline" href="#">
-                                    Privacy Standards <ArrowRight className="w-4 h-4 ml-2" />
+                                    {t('institutional.useCase3Cta')} <ArrowRight className="w-4 h-4 ml-2" />
                                 </a>
                             </div>
                         </div>
@@ -173,15 +221,19 @@ export function InstitutionalUseCases() {
                         <div className="absolute top-0 right-0 w-64 h-64 bg-[#114cd4]/5 dark:bg-[#6366F1]/10 blur-[100px] pointer-events-none"></div>
                         <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between gap-12">
                             <div className="flex-1 text-center lg:text-left">
-                                <h4 className="text-3xl md:text-4xl font-bold text-[#111827] dark:text-white mb-4 tracking-[-0.02em]">Ready to integrate Sentinel?</h4>
-                                <p className="text-slate-500 dark:text-slate-400 text-lg font-normal">Join 50+ institutions building on our privacy-first infrastructure.</p>
+                                <h4 className="text-3xl md:text-4xl font-bold text-[#111827] dark:text-white mb-4 tracking-[-0.02em]">
+                                    {t('institutional.partnersHeadline')}
+                                </h4>
+                                <p className="text-slate-500 dark:text-slate-400 text-lg font-normal">
+                                    {t('institutional.partnersBody')}
+                                </p>
                             </div>
                             <div className="flex flex-wrap justify-center gap-4">
                                 <button className="bg-[#114cd4] dark:bg-[#6366F1] hover:brightness-110 text-white font-bold py-4 px-10 rounded-none uppercase tracking-widest text-xs transition-all shadow-lg border-none cursor-pointer">
-                                    Request Demo
+                                    {t('institutional.partnersRequestDemo')}
                                 </button>
                                 <button className="border border-slate-200 dark:border-white/20 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-700 dark:text-white font-bold py-4 px-10 rounded-none uppercase tracking-widest text-xs transition-all bg-transparent cursor-pointer">
-                                    API Docs
+                                    {t('institutional.partnersApiDocs')}
                                 </button>
                             </div>
                         </div>

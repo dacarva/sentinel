@@ -13,8 +13,10 @@ import {
     Copy,
     FileDown
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function TechnicalDetails() {
+    const { t } = useTranslation('common')
     return (
         <div className="w-full bg-background-light dark:bg-background-dark">
             {/* Hero Header */}
@@ -24,16 +26,18 @@ export function TechnicalDetails() {
                     <div className="flex flex-col gap-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-widest">
                             <span className="size-2 rounded-full bg-blue-500 animate-pulse"></span>
-                            MPC-TLS Architecture
+                            {t('technical.tagline')}
                         </div>
-                        <h2 className="text-text-body-light dark:text-white text-5xl md:text-6xl font-black leading-tight tracking-tight">Trust Architecture</h2>
+                        <h2 className="text-text-body-light dark:text-white text-5xl md:text-6xl font-black leading-tight tracking-tight">
+                            {t('technical.headline')}
+                        </h2>
                         <p className="text-text-muted text-lg max-w-2xl font-light leading-relaxed">
-                            A deep dive into the Sentinel protocol: leveraging zkTLS, Noir ZK circuits, and TLSNotary for cryptographically verifiable source truth.
+                            {t('technical.body')}
                         </p>
                     </div>
                     <button className="flex min-w-[160px] items-center justify-center rounded-lg h-12 px-6 bg-primary-light dark:bg-blue-600 text-white text-sm font-bold hover:brightness-110 transition-all shadow-lg border-none cursor-pointer">
                         <FileDown className="w-4 h-4 mr-2" />
-                        Technical Whitepaper
+                        {t('technical.whitepaperCta')}
                     </button>
                 </div>
             </div>
@@ -48,24 +52,34 @@ export function TechnicalDetails() {
                             <span className="flex items-center justify-center size-10 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400">
                                 <Network className="w-6 h-6" />
                             </span>
-                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">Data Provenance via zkTLS</h3>
+                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">
+                                {t('technical.sectionA.title')}
+                            </h3>
                         </div>
                         <p className="text-text-muted leading-relaxed">
-                            Our framework enables cryptographic attestation of data directly from secure web sessions. Sentinel acts as a "Blind Notary," ensuring data integrity without ever gaining access to the underlying session keys.
+                            {t('technical.sectionA.body')}
                         </p>
                         <ul className="space-y-4">
                             <li className="flex gap-4">
                                 <ShieldCheck className="text-blue-600 dark:text-blue-400 w-5 h-5 shrink-0" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">TLSNotary Integration</p>
-                                    <p className="text-text-muted text-sm scale-95 origin-left">Three-party computation protocol for verifiable TLS 1.3 transcripts.</p>
+                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">
+                                        {t('technical.sectionA.tlsnotaryTitle')}
+                                    </p>
+                                    <p className="text-text-muted text-sm scale-95 origin-left">
+                                        {t('technical.sectionA.tlsnotaryBody')}
+                                    </p>
                                 </div>
                             </li>
                             <li className="flex gap-4">
                                 <Eye className="text-blue-600 dark:text-blue-400 w-5 h-5 shrink-0" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">Selective Redaction</p>
-                                    <p className="text-text-muted text-sm scale-95 origin-left">Users redact sensitive session data locally before generating the final proof.</p>
+                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">
+                                        {t('technical.sectionA.redactionTitle')}
+                                    </p>
+                                    <p className="text-text-muted text-sm scale-95 origin-left">
+                                        {t('technical.sectionA.redactionBody')}
+                                    </p>
                                 </div>
                             </li>
                         </ul>
@@ -75,7 +89,9 @@ export function TechnicalDetails() {
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent"></div>
                         <div className="relative flex flex-col gap-4">
                             <div className="flex items-center justify-between border-b border-grid-color dark:border-white/10 pb-4">
-                                <span className="text-xs font-mono text-text-muted uppercase tracking-widest">zkTLS Handshake Architecture</span>
+                                <span className="text-xs font-mono text-text-muted uppercase tracking-widest">
+                                    {t('technical.sectionA.diagramLabel')}
+                                </span>
                                 <Unplug className="text-text-muted w-4 h-4" />
                             </div>
                             <div className="h-64 flex items-center justify-center bg-gray-50/50 dark:bg-background-dark/50 rounded-lg border border-grid-color dark:border-white/5">
@@ -85,25 +101,35 @@ export function TechnicalDetails() {
                                         <div className="size-16 rounded-lg bg-blue-500/20 border border-blue-500 flex items-center justify-center text-blue-600 dark:text-blue-400">
                                             <Monitor className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">User Enclave</span>
+                                        <span className="text-[10px] text-text-muted font-mono">
+                                            {t('technical.sectionA.userEnclave')}
+                                        </span>
                                     </div>
                                     <div className="w-24 h-[1px] bg-grid-color dark:bg-slate-700 relative">
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-blue-600 dark:text-blue-400 font-bold">MPC</div>
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-blue-600 dark:text-blue-400 font-bold">
+                                            {t('technical.sectionA.mpcLabel')}
+                                        </div>
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
                                         <div className="size-16 rounded-full bg-primary-light/20 dark:bg-primary/20 border border-primary-light dark:border-primary flex items-center justify-center text-primary-light dark:text-primary">
                                             <ShieldCheck className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">Notary Node</span>
+                                        <span className="text-[10px] text-text-muted font-mono">
+                                            {t('technical.sectionA.notaryNode')}
+                                        </span>
                                     </div>
                                     <div className="w-24 h-[1px] bg-grid-color dark:bg-slate-700 relative">
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-text-muted">TLS 1.3</div>
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-text-muted">
+                                            {t('technical.sectionA.tlsLabel')}
+                                        </div>
                                     </div>
                                     <div className="flex flex-col items-center gap-2">
                                         <div className="size-16 rounded-lg bg-surface-light dark:bg-white/5 border border-grid-color dark:border-white/20 flex items-center justify-center text-text-muted dark:text-white/40">
                                             <Server className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">Source API</span>
+                                        <span className="text-[10px] text-text-muted font-mono">
+                                            {t('technical.sectionA.sourceApi')}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -144,19 +170,29 @@ export function TechnicalDetails() {
                             <span className="flex items-center justify-center size-10 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400">
                                 <Code2 className="w-6 h-6" />
                             </span>
-                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">AI-Generated Noir Circuits</h3>
+                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">
+                                {t('technical.sectionB.title')}
+                            </h3>
                         </div>
                         <p className="text-text-muted leading-relaxed">
-                            Sentinel's AI engine converts natural language requirements into optimized **Noir ZK circuits** instantly. These circuits allow users to prove complex logic (e.g., "Monthly income &gt; $5,000") without revealing the raw numbers.
+                            {t('technical.sectionB.body')}
                         </p>
                         <div className="grid grid-cols-1 gap-4">
                             <div className="p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-grid-color dark:border-white/10">
-                                <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">Noir DSL</p>
-                                <p className="text-text-muted text-xs">A Rust-based language for zero-knowledge proofs, optimized for the web.</p>
+                                <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">
+                                    {t('technical.sectionB.noirDslTitle')}
+                                </p>
+                                <p className="text-text-muted text-xs">
+                                    {t('technical.sectionB.noirDslBody')}
+                                </p>
                             </div>
                             <div className="p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-grid-color dark:border-white/10">
-                                <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">Barretenberg Backend</p>
-                                <p className="text-text-muted text-xs">High-performance PLONK-based proof system for instant browser verification.</p>
+                                <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">
+                                    {t('technical.sectionB.backendTitle')}
+                                </p>
+                                <p className="text-text-muted text-xs">
+                                    {t('technical.sectionB.backendBody')}
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -169,16 +205,18 @@ export function TechnicalDetails() {
                             <span className="flex items-center justify-center size-10 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400">
                                 <Wallet className="w-6 h-6" />
                             </span>
-                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">Account Abstraction</h3>
+                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">
+                                {t('technical.sectionC.title')}
+                            </h3>
                         </div>
                         <p className="text-text-muted leading-relaxed">
-                            Built on Safe (ERC-4337) infrastructure, we provide a zero-friction user experience. Smart accounts handle the complexity of gas management and recovery, ensuring institutional accessibility.
+                            {t('technical.sectionC.body')}
                         </p>
                         <div className="flex flex-col gap-3">
                             {[
-                                "Gas-less transactions via Paymasters",
-                                "Social Recovery & Hardware Key Support",
-                                "Institutional-grade Role Based Access"
+                                t('technical.sectionC.point1'),
+                                t('technical.sectionC.point2'),
+                                t('technical.sectionC.point3')
                             ].map((text, i) => (
                                 <div key={i} className="flex items-center gap-3 text-sm text-text-body-light dark:text-slate-300">
                                     <CheckCircle2 className="text-green-500 w-4 h-4" />
@@ -193,15 +231,23 @@ export function TechnicalDetails() {
                             <div className="aspect-square bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-white/10 rounded-xl p-6 flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
                                 <Zap className="text-blue-600 dark:text-blue-400 w-10 h-10 group-hover:scale-110 transition-transform" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-bold">Gas Sponsorship</p>
-                                    <p className="text-text-muted text-xs mt-1">Users pay zero network fees. Managed by protocol-level paymasters.</p>
+                                    <p className="text-text-body-light dark:text-white font-bold">
+                                        {t('technical.sectionC.card1Title')}
+                                    </p>
+                                    <p className="text-text-muted text-xs mt-1">
+                                        {t('technical.sectionC.card1Body')}
+                                    </p>
                                 </div>
                             </div>
                             <div className="aspect-square bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-white/10 rounded-xl p-6 flex flex-col justify-between group hover:border-blue-500/50 transition-colors">
                                 <Users className="text-blue-600 dark:text-blue-400 w-10 h-10 group-hover:scale-110 transition-transform" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-bold">Social Recovery</p>
-                                    <p className="text-text-muted text-xs mt-1">Recover access through trusted entities or institutional guardians.</p>
+                                    <p className="text-text-body-light dark:text-white font-bold">
+                                        {t('technical.sectionC.card2Title')}
+                                    </p>
+                                    <p className="text-text-muted text-xs mt-1">
+                                        {t('technical.sectionC.card2Body')}
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -213,14 +259,18 @@ export function TechnicalDetails() {
             <div className="max-w-6xl mx-auto px-6 md:px-10 pb-20">
                 <div className="bg-gradient-to-r from-gray-50 to-white dark:from-zinc-900/50 dark:to-background-dark border border-grid-color dark:border-white/10 rounded-2xl p-8 md:p-12 flex flex-col md:flex-row justify-between items-center gap-8 shadow-xl">
                     <div className="text-center md:text-left">
-                        <h4 className="text-text-body-light dark:text-white text-3xl font-bold leading-tight">Ready for Institutional Scale</h4>
-                        <p className="text-text-muted mt-2">Audit-ready, battle-tested, and built for high-throughput verification.</p>
+                        <h4 className="text-text-body-light dark:text-white text-3xl font-bold leading-tight">
+                            {t('technical.footer.headline')}
+                        </h4>
+                        <p className="text-text-muted mt-2">
+                            {t('technical.footer.body')}
+                        </p>
                     </div>
                     <div className="flex gap-8 sm:gap-12">
                         {[
-                            { label: 'Uptime', value: '99.9%' },
-                            { label: 'Proof Gen', value: '<2s' },
-                            { label: 'Compliance', value: 'SOC2' }
+                            { label: t('technical.footer.uptime'), value: '99.9%' },
+                            { label: t('technical.footer.proofGen'), value: '<2s' },
+                            { label: t('technical.footer.compliance'), value: 'SOC2' }
                         ].map((stat, i) => (
                             <div key={i} className="text-center">
                                 <p className="text-3xl font-black text-text-body-light dark:text-white">{stat.value}</p>

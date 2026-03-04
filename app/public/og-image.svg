@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="48%" r="45%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0a0a0c" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e1e24" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0c"/>
+  <!-- Grid -->
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <!-- Radial glow -->
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- Top accent bar -->
+  <rect x="0" y="0" width="1200" height="3" fill="#3b82f6"/>
+
+  <!-- Card -->
+  <rect x="180" y="130" width="840" height="370" rx="20" fill="#141417" stroke="#1e1e24" stroke-width="1.5"/>
+
+  <!-- Shield icon -->
+  <g transform="translate(516, 185)">
+    <path d="M84 0 L168 30 L168 90 C168 132 130 168 84 180 C38 168 0 132 0 90 L0 30 Z" fill="#3b82f6" opacity="0.15"/>
+    <path d="M84 12 L156 38 L156 90 C156 126 124 158 84 170 C44 158 12 126 12 90 L12 38 Z" fill="none" stroke="#3b82f6" stroke-width="5" stroke-linejoin="round"/>
+    <!-- Checkmark -->
+    <path d="M52 88 L76 112 L118 66" fill="none" stroke="#3b82f6" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- "Sentinel" wordmark -->
+  <text x="600" y="436" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="64" font-weight="800" fill="#ffffff" text-anchor="middle" letter-spacing="-1">Sentinel</text>
+
+  <!-- Tagline -->
+  <text x="600" y="482" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="22" font-weight="400" fill="#6b7280" text-anchor="middle" letter-spacing="0.5">Zero-knowledge financial attestations</text>
+
+  <!-- Bottom badge row -->
+  <g transform="translate(600, 530)" text-anchor="middle">
+    <!-- ZK-TLS badge -->
+    <rect x="-175" y="-16" width="88" height="28" rx="14" fill="#1e1e24" stroke="#3b82f6" stroke-width="1" opacity="0.8"/>
+    <text x="-131" y="0" font-family="system-ui, sans-serif" font-size="12" fill="#3b82f6" font-weight="600" dominant-baseline="middle">ZK-TLS</text>
+    <!-- secp256k1 badge -->
+    <rect x="-75" y="-16" width="120" height="28" rx="14" fill="#1e1e24" stroke="#3b82f6" stroke-width="1" opacity="0.8"/>
+    <text x="-15" y="0" font-family="system-ui, sans-serif" font-size="12" fill="#3b82f6" font-weight="600" dominant-baseline="middle">secp256k1</text>
+    <!-- Webhook badge -->
+    <rect x="58" y="-16" width="110" height="28" rx="14" fill="#1e1e24" stroke="#3b82f6" stroke-width="1" opacity="0.8"/>
+    <text x="113" y="0" font-family="system-ui, sans-serif" font-size="12" fill="#3b82f6" font-weight="600" dominant-baseline="middle">Webhooks</text>
+  </g>
+</svg>
