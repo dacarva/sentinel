@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { AppWizardView } from './AppWizardView'
 import { ConnectButton } from './ConnectButton'
 import { ExplainerView } from './ExplainerView'
+import { VerificationView } from './VerificationView'
 import { ThemeToggle } from './ThemeToggle'
 import { Shield } from 'lucide-react'
 
@@ -18,16 +19,39 @@ function App() {
               <h1 className="text-xl font-bold tracking-tight m-0">Sentinel</h1>
             </Link>
           </div>
-          <div className="flex items-center gap-6">
-            <Link
-              to="/app"
-              className="text-sm font-medium text-text-muted hover:text-primary-light dark:text-zinc-400 dark:hover:text-white transition-colors"
-            >
-              Launch App
-            </Link>
-            <div className="flex items-center gap-3">
-              <ThemeToggle />
-              <ConnectButton />
+          <div className="flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-8">
+              <a
+                href="/#use-cases"
+                className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-primary-light dark:hover:text-brand-accent transition-colors no-underline"
+              >
+                Use Cases
+              </a>
+              <a
+                href="/#architecture"
+                className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-primary-light dark:hover:text-brand-accent transition-colors no-underline"
+              >
+                Architecture
+              </a>
+              <Link
+                to="/verify/test"
+                className="text-[11px] font-bold uppercase tracking-widest text-text-muted hover:text-primary-light dark:hover:text-brand-accent transition-colors no-underline"
+              >
+                Verify
+              </Link>
+            </nav>
+            <div className="h-4 w-px bg-grid-color dark:bg-white/10 hidden md:block"></div>
+            <div className="flex items-center gap-4">
+              <Link
+                to="/app"
+                className="h-10 px-5 bg-primary-light dark:bg-brand-accent text-white text-[11px] font-bold uppercase tracking-widest flex items-center justify-center hover:brightness-110 transition-all shadow-lg no-underline"
+              >
+                Launch Protocol
+              </Link>
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <ConnectButton />
+              </div>
             </div>
           </div>
         </header>
@@ -36,6 +60,7 @@ function App() {
           <Routes>
             <Route path="/" element={<ExplainerView />} />
             <Route path="/app" element={<AppWizardView />} />
+            <Route path="/verify/:proofId" element={<VerificationView />} />
           </Routes>
         </main>
       </div>
