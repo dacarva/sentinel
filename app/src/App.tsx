@@ -29,7 +29,7 @@ function App() {
               <div className="p-1.5 bg-primary-light dark:bg-brand-accent rounded-lg shadow-sm dark:shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:scale-105 transition-transform shrink-0">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight m-0 truncate">{t('nav.brand')}</h1>
+              <h1 className="hidden sm:block text-xl font-bold tracking-tight m-0">{t('nav.brand')}</h1>
             </Link>
           </div>
           <div className="flex items-center gap-3 md:gap-8 shrink-0">
