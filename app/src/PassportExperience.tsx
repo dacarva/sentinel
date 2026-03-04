@@ -25,10 +25,10 @@ export function PassportExperience() {
                     </span>
                 </div>
                 <h2 className="text-5xl md:text-7xl font-semibold text-text-body-light dark:text-text-body-dark tracking-tighter-swiss mb-6">
-                    One ID, <span className="text-trust-blue">Infinite Access</span>
+                    Prove the <span className="text-trust-blue">Fact</span>, <br />Not the History.
                 </h2>
                 <p className="text-lg md:text-xl text-text-muted leading-relaxed max-w-2xl font-normal">
-                    The Passport Experience: Your secure, decentralized gateway to global financial services and digital residency.
+                    Andrés needed a loan. His bank asked for 6 months of statements. Every coffee, medical bill, and personal habit was exposed. Sentinel changed that.
                 </p>
             </div>
 
@@ -40,15 +40,15 @@ export function PassportExperience() {
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-grid-color-dark shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">01</div>
                         <Landmark className="text-primary-light dark:text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Connect</h3>
-                        <p className="text-text-muted text-sm leading-relaxed font-mono">Securely link your bank account to initiate institutional verification.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Source Truth</h3>
+                        <p className="text-text-muted text-sm leading-relaxed font-mono">Connect directly to your bank. Sentinel verifies the source via zkTLS without seeing your data.</p>
                     </div>
 
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-grid-color-dark shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">02</div>
                         <ShieldCheck className="text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Verify</h3>
-                        <p className="text-text-muted text-sm leading-relaxed font-mono">Local digital stamps generated instantly on the blockchain.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Selective Proof</h3>
+                        <p className="text-text-muted text-sm leading-relaxed font-mono">Generate a mathematical proof for exactly what you need to say. Nothing more.</p>
                     </div>
                 </div>
 
@@ -57,11 +57,11 @@ export function PassportExperience() {
                     {/* Flying Stamps Effect */}
                     <div className="absolute -top-4 left-10 animate-bounce duration-[3s] flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-xl border border-yellow-400/30">
                         <Verified className="text-yellow-400 w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Solvency Stamp</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Average Income &gt; $5k</span>
                     </div>
                     <div className="absolute bottom-10 -right-4 animate-pulse flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-xl border border-yellow-400/30">
                         <MapPin className="text-yellow-400 w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Residency Stamp</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Solvency Verified</span>
                     </div>
 
                     {/* Passport Card */}
@@ -70,8 +70,8 @@ export function PassportExperience() {
 
                         <div className="flex justify-between items-start mb-8 relative z-10">
                             <div className="flex flex-col">
-                                <p className="text-[10px] uppercase font-bold tracking-widest text-white/70">Digital Passport</p>
-                                <h4 className="text-xl font-black">SENTINEL</h4>
+                                <p className="text-[10px] uppercase font-bold tracking-widest text-white/70">Trust Link</p>
+                                <h4 className="text-xl font-black">SENTINEL RECEIPT</h4>
                             </div>
                             <Shield className="text-yellow-400 w-8 h-8" />
                         </div>
@@ -79,7 +79,7 @@ export function PassportExperience() {
                         <div className="flex gap-4 items-end relative z-10">
                             <div className="size-20 bg-slate-200/20 rounded-lg backdrop-blur-sm border border-white/20 overflow-hidden">
                                 <div className="w-full h-full flex items-center justify-center">
-                                    <User className="w-10 h-10 text-white/50" />
+                                    <Lock className="w-10 h-10 text-white/50" />
                                 </div>
                             </div>
                             <div className="flex-1 space-y-2">
@@ -97,10 +97,10 @@ export function PassportExperience() {
                         </div>
 
                         <div className="mt-8 flex justify-between items-center relative z-10">
-                            <p className="text-[9px] font-mono text-white/60">ID: SN-9284-XK-2024</p>
+                            <p className="text-[9px] font-mono text-white/60">PROOF_ID: SN-ZK-2026</p>
                             <div className="flex items-center gap-1">
                                 <div className="size-2 rounded-full bg-green-400"></div>
-                                <span className="text-[10px] font-bold text-green-400 uppercase">Valid Status</span>
+                                <span className="text-[10px] font-bold text-green-400 uppercase">Cryptographically Secure</span>
                             </div>
                         </div>
                     </div>
@@ -111,10 +111,10 @@ export function PassportExperience() {
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border-2 border-primary-light dark:border-primary shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">03</div>
                         <Globe className="text-primary-light dark:text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Go Global</h3>
-                        <p className="text-text-muted text-sm leading-relaxed mb-6 font-mono">Access DeFi yields, global insurance, and cross-border assets instantly.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Share Truth</h3>
+                        <p className="text-text-muted text-sm leading-relaxed mb-6 font-mono">Send a Trust Link to your lender. They get instant certainty; you get total privacy.</p>
                         <button className="w-full h-12 bg-primary-light dark:bg-primary text-white text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:shadow-hard-hover transition-all border-none cursor-pointer">
-                            Launch DeFi <ArrowRight className="w-4 h-4 ml-1" />
+                            View Receipt <ArrowRight className="w-4 h-4 ml-1" />
                         </button>
                     </div>
                 </div>
@@ -124,18 +124,18 @@ export function PassportExperience() {
             <div className="max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-grid-color dark:border-grid-color-dark mt-20">
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <CreditCard className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">Solvency Stamps</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Prove financial health without revealing exact history.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">No Data Exposure</h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">Prove solvency and income without sharing your coffee receipts or full history.</p>
                 </div>
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <Building2 className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">Digital Residency</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Establish local presence digitally for international compliance.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">Source Integrity</h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">Verified directly from the bank's TLS session. Zero chance of forgery.</p>
                 </div>
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <Lock className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">ZKP Privacy</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Zero-Knowledge Proofs ensure your data stays private.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">ZK-Powered</h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">Math-based guarantees that replace human-based reviews.</p>
                 </div>
             </div>
         </section>

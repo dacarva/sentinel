@@ -24,16 +24,16 @@ export function TechnicalDetails() {
                     <div className="flex flex-col gap-4">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-bold uppercase tracking-widest">
                             <span className="size-2 rounded-full bg-blue-500 animate-pulse"></span>
-                            Bank-Grade Infrastructure
+                            MPC-TLS Architecture
                         </div>
-                        <h2 className="text-text-body-light dark:text-white text-5xl md:text-6xl font-black leading-tight tracking-tight">Technical Details</h2>
+                        <h2 className="text-text-body-light dark:text-white text-5xl md:text-6xl font-black leading-tight tracking-tight">Trust Architecture</h2>
                         <p className="text-text-muted text-lg max-w-2xl font-light leading-relaxed">
-                            Deep dive into our privacy-first verification framework, leveraging zkTLS, MPC-TLS, and Zero-Knowledge proofs for institutional reliability.
+                            A deep dive into the Sentinel protocol: leveraging zkTLS, Noir ZK circuits, and TLSNotary for cryptographically verifiable source truth.
                         </p>
                     </div>
                     <button className="flex min-w-[160px] items-center justify-center rounded-lg h-12 px-6 bg-primary-light dark:bg-blue-600 text-white text-sm font-bold hover:brightness-110 transition-all shadow-lg border-none cursor-pointer">
                         <FileDown className="w-4 h-4 mr-2" />
-                        Download Whitepaper
+                        Technical Whitepaper
                     </button>
                 </div>
             </div>
@@ -51,21 +51,21 @@ export function TechnicalDetails() {
                             <h3 className="text-text-body-light dark:text-white text-2xl font-bold">Data Provenance via zkTLS</h3>
                         </div>
                         <p className="text-text-muted leading-relaxed">
-                            Our MPC-TLS framework enables cryptographic attestation of data directly from secure web sessions. The Sentinel acts as a non-intrusive observer, ensuring data integrity without ever gaining access to the underlying session keys.
+                            Our framework enables cryptographic attestation of data directly from secure web sessions. Sentinel acts as a "Blind Notary," ensuring data integrity without ever gaining access to the underlying session keys.
                         </p>
                         <ul className="space-y-4">
                             <li className="flex gap-4">
                                 <ShieldCheck className="text-blue-600 dark:text-blue-400 w-5 h-5 shrink-0" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">MPC-TLS Framework</p>
-                                    <p className="text-text-muted text-sm scale-95 origin-left">Three-party computation protocol for TLS stack extensions.</p>
+                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">TLSNotary Integration</p>
+                                    <p className="text-text-muted text-sm scale-95 origin-left">Three-party computation protocol for verifiable TLS 1.3 transcripts.</p>
                                 </div>
                             </li>
                             <li className="flex gap-4">
                                 <Eye className="text-blue-600 dark:text-blue-400 w-5 h-5 shrink-0" />
                                 <div>
-                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">Sentinel Observer</p>
-                                    <p className="text-text-muted text-sm scale-95 origin-left">Passive monitoring of transcript integrity and server certificates.</p>
+                                    <p className="text-text-body-light dark:text-white font-semibold text-sm">Selective Redaction</p>
+                                    <p className="text-text-muted text-sm scale-95 origin-left">Users redact sensitive session data locally before generating the final proof.</p>
                                 </div>
                             </li>
                         </ul>
@@ -75,7 +75,7 @@ export function TechnicalDetails() {
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent"></div>
                         <div className="relative flex flex-col gap-4">
                             <div className="flex items-center justify-between border-b border-grid-color dark:border-white/10 pb-4">
-                                <span className="text-xs font-mono text-text-muted uppercase tracking-widest">MPC-TLS Architecture Diagram</span>
+                                <span className="text-xs font-mono text-text-muted uppercase tracking-widest">zkTLS Handshake Architecture</span>
                                 <Unplug className="text-text-muted w-4 h-4" />
                             </div>
                             <div className="h-64 flex items-center justify-center bg-gray-50/50 dark:bg-background-dark/50 rounded-lg border border-grid-color dark:border-white/5">
@@ -85,7 +85,7 @@ export function TechnicalDetails() {
                                         <div className="size-16 rounded-lg bg-blue-500/20 border border-blue-500 flex items-center justify-center text-blue-600 dark:text-blue-400">
                                             <Monitor className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">User Client</span>
+                                        <span className="text-[10px] text-text-muted font-mono">User Enclave</span>
                                     </div>
                                     <div className="w-24 h-[1px] bg-grid-color dark:bg-slate-700 relative">
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-blue-600 dark:text-blue-400 font-bold">MPC</div>
@@ -94,7 +94,7 @@ export function TechnicalDetails() {
                                         <div className="size-16 rounded-full bg-primary-light/20 dark:bg-primary/20 border border-primary-light dark:border-primary flex items-center justify-center text-primary-light dark:text-primary">
                                             <ShieldCheck className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">Sentinel Node</span>
+                                        <span className="text-[10px] text-text-muted font-mono">Notary Node</span>
                                     </div>
                                     <div className="w-24 h-[1px] bg-grid-color dark:bg-slate-700 relative">
                                         <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-background-light dark:bg-background-dark rounded border border-grid-color dark:border-white/10 text-[8px] text-text-muted">TLS 1.3</div>
@@ -103,7 +103,7 @@ export function TechnicalDetails() {
                                         <div className="size-16 rounded-lg bg-surface-light dark:bg-white/5 border border-grid-color dark:border-white/20 flex items-center justify-center text-text-muted dark:text-white/40">
                                             <Server className="w-8 h-8" />
                                         </div>
-                                        <span className="text-[10px] text-text-muted font-mono">Web Server</span>
+                                        <span className="text-[10px] text-text-muted font-mono">Source API</span>
                                     </div>
                                 </div>
                             </div>
@@ -111,7 +111,7 @@ export function TechnicalDetails() {
                     </div>
                 </section>
 
-                {/* Section B: Selective Revelation (Noir ZK Circuits) */}
+                {/* Section B: AI-Generated Noir Circuits */}
                 <section className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start pt-8">
                     <div className="lg:col-span-7 order-2 lg:order-1 bg-surface-light dark:bg-background-dark border border-grid-color dark:border-white/10 rounded-xl overflow-hidden shadow-2xl">
                         <div className="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-white/5 border-b border-grid-color dark:border-white/10">
@@ -120,7 +120,7 @@ export function TechnicalDetails() {
                                 <div className="size-3 rounded-full bg-yellow-500/50"></div>
                                 <div className="size-3 rounded-full bg-green-500/50"></div>
                             </div>
-                            <span className="text-xs font-mono text-text-muted">balance_check.nr</span>
+                            <span className="text-xs font-mono text-text-muted">bancolombia_threshold.nr</span>
                             <Copy className="text-text-muted w-3.5 h-3.5 cursor-pointer hover:text-blue-500 transition-colors" />
                         </div>
                         <div className="p-6 font-mono text-xs leading-relaxed overflow-x-auto text-text-body-light dark:text-slate-300">
@@ -130,11 +130,11 @@ export function TechnicalDetails() {
                                 <br />    <span className="text-primary-light dark:text-primary">private</span> balance: Field,
                                 <br />    <span className="text-primary-light dark:text-primary">public</span> threshold: Field
                                 <br />) {"{"}
-                                <br />    <span className="text-text-muted italic">// ZK-SNARK Constraint Logic</span>
+                                <br />    <span className="text-text-muted italic">// AI-Generated ZK Constraint</span>
                                 <br />    <span className="text-blue-600 dark:text-blue-400">assert</span>(balance &gt;= threshold);
                                 <br />
-                                <br />    <span className="text-text-muted italic">// Proof generated via Barretenberg backend</span>
-                                <br />    <span className="text-blue-600 dark:text-blue-400">let</span> proof = std::hash::pedersen([balance, threshold]);
+                                <br />    <span className="text-text-muted italic">// Proof sent to Verifier</span>
+                                <br />    std::println(threshold);
                                 <br />{"}"}</code></pre>
                         </div>
                     </div>
@@ -144,19 +144,19 @@ export function TechnicalDetails() {
                             <span className="flex items-center justify-center size-10 rounded-lg bg-blue-500/20 text-blue-600 dark:text-blue-400">
                                 <Code2 className="w-6 h-6" />
                             </span>
-                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">Selective Revelation</h3>
+                            <h3 className="text-text-body-light dark:text-white text-2xl font-bold">AI-Generated Noir Circuits</h3>
                         </div>
                         <p className="text-text-muted leading-relaxed">
-                            Powered by Noir ZK Circuits, our system generates highly efficient SNARK proofs that allow users to reveal only necessary information (e.g., "balance &gt; $10,000") without exposing their full identity or exact holdings.
+                            Sentinel's AI engine converts natural language requirements into optimized **Noir ZK circuits** instantly. These circuits allow users to prove complex logic (e.g., "Monthly income &gt; $5,000") without revealing the raw numbers.
                         </p>
                         <div className="grid grid-cols-1 gap-4">
                             <div className="p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-grid-color dark:border-white/10">
                                 <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">Noir DSL</p>
-                                <p className="text-text-muted text-xs">High-level ZK programming language for complex logic.</p>
+                                <p className="text-text-muted text-xs">A Rust-based language for zero-knowledge proofs, optimized for the web.</p>
                             </div>
                             <div className="p-4 rounded-lg bg-gray-50 dark:bg-white/5 border border-grid-color dark:border-white/10">
                                 <p className="text-text-body-light dark:text-white text-sm font-bold mb-1">Barretenberg Backend</p>
-                                <p className="text-text-muted text-xs">Turbo-PLONK based proof system for lightning-fast verification.</p>
+                                <p className="text-text-muted text-xs">High-performance PLONK-based proof system for instant browser verification.</p>
                             </div>
                         </div>
                     </div>

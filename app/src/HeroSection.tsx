@@ -20,13 +20,13 @@ export function HeroSection() {
 
                             {/* Headline */}
                             <h1 className="text-5xl md:text-6xl lg:text-[72px] leading-[1.05] font-semibold text-text-body-light dark:text-white tracking-tighter-swiss mb-8">
-                                Your Data is <span className="text-trust-blue">Private</span>. <br />
-                                Your Power is <br /> Universal.
+                                Verify the <span className="text-trust-blue">Fact</span>. <br />
+                                Hide the Data.
                             </h1>
 
                             {/* Subhead */}
                             <p className="text-lg md:text-xl text-text-muted leading-relaxed mb-10 max-w-lg font-normal">
-                                Sentinel is the world’s first Financial Passport powered by Zero-Knowledge technology. Prove your bank balance, income, and identity to any global app without ever handing over your private data.
+                                The world’s first Proof Engine powered by zkTLS. Prove your bank balance, income, or credentials directly from the source—without revealing your identity or private history.
                             </p>
 
                             {/* CTA Actions */}
@@ -35,7 +35,7 @@ export function HeroSection() {
                                     to="/app"
                                     className="bg-primary-light dark:bg-primary hover:-translate-y-[2px] transition-all duration-200 text-white text-base font-bold px-8 h-14 rounded-sm flex items-center justify-center gap-2 min-w-[200px] shadow-hard hover:shadow-hard-hover"
                                 >
-                                    <span>Get Your Passport</span>
+                                    <span>Generate Your First Proof</span>
                                     <ArrowRight className="w-5 h-5" />
                                 </Link>
                                 <a
