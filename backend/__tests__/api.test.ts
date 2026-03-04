@@ -14,6 +14,8 @@ let dataDir: string;
 beforeAll(async () => {
   dataDir = mkdtempSync(join(tmpdir(), "sentinel-api-"));
   process.env.DATA_DIR = dataDir;
+  // Disable webhook requirement so JS presentation tests don't depend on a running TLSNotary verifier.
+  process.env.REQUIRE_WEBHOOK = "false";
   const { startServer } = await import("../src/server.js");
   server = await startServer(3000);
 });
