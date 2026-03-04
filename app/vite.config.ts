@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import wasm from 'vite-plugin-wasm'
+import { defineConfig } from 'vite'
 import topLevelAwait from 'vite-plugin-top-level-await'
+import wasm from 'vite-plugin-wasm'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), wasm(), topLevelAwait()],
+  plugins: [react(), tailwindcss(), wasm(), topLevelAwait()],
   // Prevent esbuild from pre-bundling WASM packages — they use
   // `new URL('./file.wasm', import.meta.url)` internally which breaks when
   // esbuild rewrites the module. The plugin handles WASM loading instead.
