@@ -14,7 +14,7 @@ import {
 
 export function InstitutionalUseCases() {
     return (
-        <div className="w-full bg-white dark:bg-[#050816] transition-colors font-display">
+        <div id="use-cases" className="w-full bg-white dark:bg-[#050816] transition-colors font-display">
             {/* Andrés' Journey: Transformation Section */}
             <section className="py-24 px-6 lg:px-20 bg-white dark:bg-[#050816] dark:bg-grid-pattern-dark border-b border-black/5 dark:border-white/10">
                 <div className="max-w-7xl mx-auto">

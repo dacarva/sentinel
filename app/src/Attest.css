@@ -128,3 +128,9 @@
   color: #166534;
   font-size: 0.95rem;
 }
+
+/* Monospace terminal styling for the live status view in Attest.tsx */
+.terminal-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+}

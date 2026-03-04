@@ -1,7 +1,6 @@
 import { useAttestFlow } from './useAttestFlow'
 import type { AttestStatus, FullAttestation, ThresholdClaim } from './useAttestFlow'
 import { PLUGIN_LABELS } from './useAttestFlow'
-import { Attest } from './Attest'
 import { CheckCircle2, ChevronDown, Loader2 } from 'lucide-react'
 
 function StatusLabel({ status }: { status: AttestStatus }) {
@@ -203,17 +202,6 @@ export function SentinelProofPage() {
             />
           </div>
         )}
-      </div>
-
-      <div className="text-center group">
-        <details className="text-zinc-600">
-          <summary className="text-[10px] font-bold uppercase tracking-[0.2em] cursor-pointer hover:text-zinc-400 transition-colors list-none">
-            Developer Resources
-          </summary>
-          <div className="mt-4 p-4 rounded-2xl border border-white/5 bg-zinc-900/20">
-            <Attest />
-          </div>
-        </details>
       </div>
     </div>
   )

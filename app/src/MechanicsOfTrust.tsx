@@ -15,7 +15,7 @@ import {
 
 export function MechanicsOfTrust() {
     return (
-        <div className="w-full bg-background-light dark:bg-background-dark">
+        <div id="architecture" className="w-full bg-background-light dark:bg-background-dark">
             {/* Mechanics Hero Section */}
             <section className="relative min-h-[600px] flex items-center py-20 px-6 md:px-20 border-b border-grid-color dark:border-white/10 bg-grid-pattern-light dark:bg-grid-pattern-dark overflow-hidden">
                 <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center w-full">
