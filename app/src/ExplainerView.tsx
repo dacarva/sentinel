@@ -1,5 +1,3 @@
-import { Link } from 'react-router-dom'
-import { ArrowRight, CheckCircle2, Lock, ShieldCheck, Zap } from 'lucide-react'
 import { HeroSection } from './HeroSection'
 import { PassportExperience } from './PassportExperience'
 import { InstitutionalUseCases } from './InstitutionalUseCases'

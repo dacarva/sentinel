@@ -9,7 +9,6 @@ import {
     Terminal,
     Cpu,
     LayoutGrid,
-    ArrowRight,
     SearchCode
 } from 'lucide-react'
 

@@ -9,8 +9,6 @@ import {
     Fingerprint,
     ShieldPlus,
     ArrowRight,
-    CheckCircle2,
-    XCircle,
     Network
 } from 'lucide-react'
 
