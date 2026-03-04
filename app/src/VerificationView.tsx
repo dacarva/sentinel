@@ -1,9 +1,7 @@
 import { useParams, Link } from 'react-router-dom'
 import { 
     ShieldCheck, 
-    ShieldAlert, 
     ExternalLink, 
-    Clock, 
     FileJson, 
     ChevronDown, 
     Search, 
@@ -15,6 +13,7 @@ import {
     AlertCircle
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface ProofStamp {
     id: string;
@@ -36,6 +35,7 @@ export function VerificationView() {
     const { proofId } = useParams<{ proofId: string }>()
     const [isValidating, setIsValidating] = useState(true)
     const [isExpanded, setIsExpanded] = useState<string | null>(null)
+    const { t } = useTranslation('common')
 
     // Mock data based on the strategy
     const [proofs] = useState<ProofStamp[]>([
@@ -71,7 +71,7 @@ export function VerificationView() {
                 {/* Back Link */}
                 <Link to="/" className="flex items-center gap-2 text-text-muted hover:text-primary-light dark:hover:text-white transition-colors w-fit">
                     <ArrowLeft className="w-4 h-4" />
-                    <span className="text-sm font-medium">Back to Home</span>
+                    <span className="text-sm font-medium">{t('verification.backToHome')}</span>
                 </Link>
 
                 {/* Main Receipt Header */}
@@ -84,27 +84,37 @@ export function VerificationView() {
                                 <div className="p-2 bg-primary-light dark:bg-brand-accent rounded-lg shadow-sm">
                                     <ShieldCheck className="w-6 h-6 text-white" />
                                 </div>
-                                <h1 className="text-2xl font-black uppercase tracking-tight m-0">Sentinel Trust Receipt</h1>
+                                <h1 className="text-2xl font-black uppercase tracking-tight m-0">
+                                    {t('verification.title')}
+                                </h1>
                             </div>
-                            <p className="text-xs font-mono text-text-muted">RECEIPT_ID: {proofId || 'SN-ZK-2026-X'}</p>
+                            <p className="text-xs font-mono text-text-muted">
+                                {t('verification.receiptIdLabel')}: {proofId || 'SN-ZK-2026-X'}
+                            </p>
                         </div>
 
                         {isValidating ? (
                             <div className="flex items-center gap-3 bg-primary-light/10 dark:bg-brand-accent/10 border border-primary-light/20 dark:border-brand-accent/20 px-4 py-2 rounded-full">
                                 <div className="w-2 h-2 rounded-full bg-primary-light dark:bg-brand-accent animate-ping"></div>
-                                <span className="text-xs font-bold uppercase tracking-widest text-primary-light dark:text-brand-accent">Re-verifying Math...</span>
+                                <span className="text-xs font-bold uppercase tracking-widest text-primary-light dark:text-brand-accent">
+                                    {t('verification.reverifying')}
+                                </span>
                             </div>
                         ) : (
                             <div className="flex items-center gap-3 bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-full">
                                 <CheckCircle2 className="w-4 h-4 text-green-500" />
-                                <span className="text-xs font-bold uppercase tracking-widest text-green-500">Verdict: Authenticated</span>
+                                <span className="text-xs font-bold uppercase tracking-widest text-green-500">
+                                    {t('verification.verdictAuthenticated')}
+                                </span>
                             </div>
                         )}
                     </div>
 
                     <div className="space-y-6 relative z-10">
                         <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted">Independent Proof Stamps</h2>
+                            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted">
+                                {t('verification.independentProofStamps')}
+                            </h2>
                             <div className="h-px flex-1 bg-grid-color dark:bg-white/5"></div>
                         </div>
 
@@ -131,9 +141,15 @@ export function VerificationView() {
                                                 <div className="flex flex-col items-end gap-1">
                                                     <div className="flex items-center gap-1.5 text-green-500">
                                                         <ShieldCheck className="w-4 h-4" />
-                                                        <span className="text-[10px] font-bold uppercase tracking-widest">Verified Source</span>
+                                                            <span className="text-[10px] font-bold uppercase tracking-widest">
+                                                                {t('verification.verifiedSource')}
+                                                            </span>
                                                     </div>
-                                                    <span className="text-[9px] font-mono text-text-muted uppercase">Verified {new Date(proof.timestamp).toLocaleDateString()}</span>
+                                                        <span className="text-[9px] font-mono text-text-muted uppercase">
+                                                            {t('verification.verifiedOn', {
+                                                              date: new Date(proof.timestamp).toLocaleDateString(),
+                                                            })}
+                                                        </span>
                                                 </div>
                                                 <ChevronDown className={`w-5 h-5 text-text-muted transition-transform ${isExpanded === proof.id ? 'rotate-180' : ''}`} />
                                             </div>
@@ -146,20 +162,28 @@ export function VerificationView() {
                                             <div className="flex flex-col gap-4 mt-4">
                                                 <div className="flex items-center gap-2">
                                                     <Search className="w-3 h-3 text-text-muted" />
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">Cryptographic Audit Trail</span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-text-muted">
+                                                        {t('verification.auditTrail')}
+                                                    </span>
                                                 </div>
                                                 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                     <div className="flex flex-col gap-1.5 p-3 bg-background-light dark:bg-background-dark border border-grid-color dark:border-white/5 rounded">
-                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">TLS Session Hash</span>
+                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">
+                                                            {t('verification.tlsSessionHash')}
+                                                        </span>
                                                         <span className="text-[10px] font-mono text-text-body-light dark:text-zinc-400 break-all">{proof.technicalDetails.sessionHash}</span>
                                                     </div>
                                                     <div className="flex flex-col gap-1.5 p-3 bg-background-light dark:bg-background-dark border border-grid-color dark:border-white/5 rounded">
-                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">Noir Circuit ID</span>
+                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">
+                                                            {t('verification.noirCircuitId')}
+                                                        </span>
                                                         <span className="text-[10px] font-mono text-text-body-light dark:text-zinc-400 break-all">{proof.technicalDetails.circuitId}</span>
                                                     </div>
                                                     <div className="flex flex-col gap-1.5 p-3 bg-background-light dark:bg-background-dark border border-grid-color dark:border-white/5 rounded md:col-span-2">
-                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">Sentinel Notary Signature</span>
+                                                        <span className="text-[8px] font-mono font-bold text-text-muted uppercase">
+                                                            {t('verification.notarySignature')}
+                                                        </span>
                                                         <span className="text-[10px] font-mono text-text-body-light dark:text-zinc-400 break-all">{proof.technicalDetails.notarySignature}</span>
                                                     </div>
                                                 </div>
@@ -172,11 +196,11 @@ export function VerificationView() {
                                                         className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary-light dark:text-brand-accent hover:underline"
                                                     >
                                                         <ExternalLink className="w-3 h-3" />
-                                                        Visit Source API
+                                                        {t('verification.visitSourceApi')}
                                                     </a>
                                                     <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-text-muted">
                                                         <Lock className="w-3 h-3" />
-                                                        End-to-End Encrypted
+                                                        {t('verification.endToEndEncrypted')}
                                                     </div>
                                                 </div>
                                             </div>
@@ -191,16 +215,18 @@ export function VerificationView() {
                     <div className="mt-12 pt-8 border-t border-grid-color dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-6 relative z-10">
                         <div className="flex items-center gap-4 text-text-muted">
                             <Database className="w-4 h-4" />
-                            <span className="text-[10px] font-mono uppercase tracking-[0.2em]">Stored on Sentinel Secure Database</span>
+                            <span className="text-[10px] font-mono uppercase tracking-[0.2em]">
+                                {t('verification.secureDatabase')}
+                            </span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button className="flex items-center gap-2 h-10 px-4 bg-surface-light dark:bg-white/5 hover:bg-surface-light/80 dark:hover:bg-white/10 border border-grid-color dark:border-white/10 text-[10px] font-bold uppercase tracking-widest transition-all cursor-pointer">
                                 <FileJson className="w-4 h-4 text-primary-light dark:text-brand-accent" />
-                                Download JSON
+                                {t('verification.downloadJson')}
                             </button>
                             <button className="flex items-center gap-2 h-10 px-4 bg-primary-light dark:bg-brand-accent text-white border-none text-[10px] font-bold uppercase tracking-widest hover:brightness-110 transition-all shadow-lg cursor-pointer">
                                 <Share2 className="w-4 h-4" />
-                                Share Receipt
+                                {t('verification.shareReceipt')}
                             </button>
                         </div>
                     </div>
@@ -211,9 +237,11 @@ export function VerificationView() {
                     <div className="flex items-start gap-4">
                         <AlertCircle className="w-5 h-5 text-primary-light dark:text-brand-accent shrink-0 mt-0.5" />
                         <div className="space-y-2">
-                            <h4 className="text-xs font-bold uppercase tracking-widest text-text-body-light dark:text-white">Is this proof real?</h4>
+                            <h4 className="text-xs font-bold uppercase tracking-widest text-text-body-light dark:text-white">
+                                {t('verification.isProofReal')}
+                            </h4>
                             <p className="text-xs text-text-muted leading-relaxed font-normal">
-                                This receipt is a cryptographic guarantee that the data above was extracted from a verified TLS session with the source institution. Sentinel used Zero-Knowledge Proofs to ensure that the user only revealed the specific fact requested, while the rest of their data remained private and end-to-end encrypted.
+                                {t('verification.proofExplanation')}
                             </p>
                         </div>
                     </div>

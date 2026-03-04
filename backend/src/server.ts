@@ -9,6 +9,7 @@ import { verify } from "./verifier/index.js";
 import { storeWebhook, lookupWebhook } from "./attestation/webhook-store.js";
 import { getTlsnWebhookSecret, requireWebhookVerification, getNotaryPubKey } from "./config.js";
 import { verifyWebhookHmac } from "./attestation/webhook-hmac.js";
+import { detectLocale, t } from "./i18n.js";
 import type { DisclosedData, JsPresentation, JsPresentationWithZk, TlsnWebhookPayload, TlsnHandlerResult } from "./types.js";
 
 const app = express();
@@ -56,7 +57,8 @@ app.post("/webhook/tlsn", (req: any, res) => {
   }
 
   if (!payload?.results || !payload?.server_name) {
-    res.status(400).json({ error: "BAD_REQUEST", message: "Invalid webhook payload" });
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    res.status(400).json({ error: "BAD_REQUEST", message: t(locale, "webhook.invalidPayload") });
     return;
   }
   storeWebhook(payload);
@@ -70,17 +72,18 @@ app.post("/attest", async (req, res) => {
       presentation?: string | JsPresentation;
       _mockDisclosed?: DisclosedData;
     };
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
     if (!user_address || typeof user_address !== "string") {
       res.status(400).json({
         error: "BAD_REQUEST",
-        message: "user_address is required",
+        message: t(locale, "attest.userAddressRequired"),
       });
       return;
     }
     if (presentation === undefined || presentation === null) {
       res.status(400).json({
         error: "BAD_REQUEST",
-        message: "presentation is required",
+        message: t(locale, "attest.presentationRequired"),
       });
       return;
     }
@@ -96,7 +99,7 @@ app.post("/attest", async (req, res) => {
         if (!found) {
           res.status(422).json({
             error: "WEBHOOK_REQUIRED",
-            message: "No verifier webhook received for this proof. Ensure the TLSNotary verifier is running and configured to POST to this backend.",
+            message: t(locale, "attest.webhookRequired"),
           });
           return;
         }
@@ -151,7 +154,7 @@ app.post("/attest", async (req, res) => {
     }
     res.status(422).json({
       error: "VERIFICATION_FAILED",
-      message: "Presentation verification failed",
+      message: t(detectLocale(req.headers["accept-language"] as string | undefined), "attest.verificationFailed"),
       details: { reason: message },
     });
   }
@@ -161,16 +164,18 @@ app.get("/attest/:id", async (req, res) => {
   const id = req.params.id;
   const att = await loadAttestation(id);
   if (!att) {
-    res.status(404).json({ error: "NOT_FOUND", message: "Attestation not found" });
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    res.status(404).json({ error: "NOT_FOUND", message: t(locale, "attestation.notFound") });
     return;
   }
   res.json(att);
 });
 
 app.get("/verify/:id", (_req, res) => {
+  const locale = detectLocale(_req.headers["accept-language"] as string | undefined);
   res.status(405).json({
     error: "METHOD_NOT_ALLOWED",
-    message: "Use POST to verify an attestation",
+    message: t(locale, "verify.usePost"),
   });
 });
 
@@ -178,7 +183,8 @@ app.post("/verify/:id", async (req, res) => {
   const id = req.params.id;
   const att = await loadAttestation(id);
   if (!att) {
-    res.status(404).json({ error: "NOT_FOUND", message: "Attestation not found" });
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    res.status(404).json({ error: "NOT_FOUND", message: t(locale, "attestation.notFound") });
     return;
   }
   try {

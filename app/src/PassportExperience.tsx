@@ -6,14 +6,15 @@ import {
     Verified,
     MapPin,
     Shield,
-    User,
     Check,
     CreditCard,
     Building2,
     Lock
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export function PassportExperience() {
+    const { t } = useTranslation('common')
     return (
         <section className="flex-grow w-full max-w-[1440px] mx-auto bg-background-light dark:bg-background-dark border-x border-grid-color dark:border-grid-color-dark pt-8 pb-16">
             {/* Header Section */}
@@ -21,14 +22,18 @@ export function PassportExperience() {
                 <div className="inline-flex items-center gap-2 px-3 py-1 bg-surface-light dark:bg-surface-dark rounded-full mb-8 border border-grid-color dark:border-grid-color-dark">
                     <div className="w-2 h-2 rounded-full bg-primary-light dark:bg-trust-blue animate-pulse"></div>
                     <span className="text-xs font-mono font-medium text-primary-light dark:text-trust-blue uppercase tracking-wider">
-                        Next-Gen Identity Protocol
+                        {t('passport.tagline')}
                     </span>
                 </div>
                 <h2 className="text-5xl md:text-7xl font-semibold text-text-body-light dark:text-text-body-dark tracking-tighter-swiss mb-6">
-                    Prove the <span className="text-trust-blue">Fact</span>, <br />Not the History.
+                    {t('passport.headlinePart1')}
+                    <span className="text-trust-blue">{t('passport.headlineEmphasis')}</span>
+                    {t('passport.headlinePart2')}
+                    <br />
+                    {t('passport.headlineSecondLine')}
                 </h2>
                 <p className="text-lg md:text-xl text-text-muted leading-relaxed max-w-2xl font-normal">
-                    Andrés needed a loan. His bank asked for 6 months of statements. Every coffee, medical bill, and personal habit was exposed. Sentinel changed that.
+                    {t('passport.story')}
                 </p>
             </div>
 
@@ -40,15 +45,23 @@ export function PassportExperience() {
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-grid-color-dark shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">01</div>
                         <Landmark className="text-primary-light dark:text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Source Truth</h3>
-                        <p className="text-text-muted text-sm leading-relaxed font-mono">Connect directly to your bank. Sentinel verifies the source via zkTLS without seeing your data.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">
+                            {t('passport.step1Title')}
+                        </h3>
+                        <p className="text-text-muted text-sm leading-relaxed font-mono">
+                            {t('passport.step1Body')}
+                        </p>
                     </div>
 
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border border-grid-color dark:border-grid-color-dark shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">02</div>
                         <ShieldCheck className="text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Selective Proof</h3>
-                        <p className="text-text-muted text-sm leading-relaxed font-mono">Generate a mathematical proof for exactly what you need to say. Nothing more.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">
+                            {t('passport.step2Title')}
+                        </h3>
+                        <p className="text-text-muted text-sm leading-relaxed font-mono">
+                            {t('passport.step2Body')}
+                        </p>
                     </div>
                 </div>
 
@@ -57,11 +70,15 @@ export function PassportExperience() {
                     {/* Flying Stamps Effect */}
                     <div className="absolute -top-4 left-10 animate-bounce duration-[3s] flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-xl border border-yellow-400/30">
                         <Verified className="text-yellow-400 w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Average Income &gt; $5k</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">
+                            {t('passport.floatingStampIncome')}
+                        </span>
                     </div>
                     <div className="absolute bottom-10 -right-4 animate-pulse flex items-center gap-2 bg-white dark:bg-slate-800 p-2 rounded-lg shadow-xl border border-yellow-400/30">
                         <MapPin className="text-yellow-400 w-4 h-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">Solvency Verified</span>
+                        <span className="text-[10px] font-bold uppercase tracking-tighter text-text-body-light dark:text-text-body-dark">
+                            {t('passport.floatingStampSolvency')}
+                        </span>
                     </div>
 
                     {/* Passport Card */}
@@ -70,8 +87,10 @@ export function PassportExperience() {
 
                         <div className="flex justify-between items-start mb-8 relative z-10">
                             <div className="flex flex-col">
-                                <p className="text-[10px] uppercase font-bold tracking-widest text-white/70">Trust Link</p>
-                                <h4 className="text-xl font-black">SENTINEL RECEIPT</h4>
+                                <p className="text-[10px] uppercase font-bold tracking-widest text-white/70">
+                                    {t('passport.cardTrustLink')}
+                                </p>
+                                <h4 className="text-xl font-black">{t('passport.cardTitle')}</h4>
                             </div>
                             <Shield className="text-yellow-400 w-8 h-8" />
                         </div>
@@ -97,10 +116,12 @@ export function PassportExperience() {
                         </div>
 
                         <div className="mt-8 flex justify-between items-center relative z-10">
-                            <p className="text-[9px] font-mono text-white/60">PROOF_ID: SN-ZK-2026</p>
+                            <p className="text-[9px] font-mono text-white/60">{t('passport.cardProofId')}</p>
                             <div className="flex items-center gap-1">
                                 <div className="size-2 rounded-full bg-green-400"></div>
-                                <span className="text-[10px] font-bold text-green-400 uppercase">Cryptographically Secure</span>
+                                <span className="text-[10px] font-bold text-green-400 uppercase">
+                                    {t('passport.cardSecure')}
+                                </span>
                             </div>
                         </div>
                     </div>
@@ -111,10 +132,14 @@ export function PassportExperience() {
                     <div className="relative p-8 bg-surface-light dark:bg-surface-dark border-2 border-primary-light dark:border-primary shadow-hard dark:shadow-hard dark:shadow-trust-blue hover:-translate-y-1 transition-transform group">
                         <div className="absolute -top-3 -right-3 size-8 bg-primary-light dark:bg-primary text-white flex items-center justify-center text-xs font-mono font-bold">03</div>
                         <Globe className="text-primary-light dark:text-trust-blue w-8 h-8 mb-4" />
-                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">Share Truth</h3>
-                        <p className="text-text-muted text-sm leading-relaxed mb-6 font-mono">Send a Trust Link to your lender. They get instant certainty; you get total privacy.</p>
+                        <h3 className="text-lg font-bold text-text-body-light dark:text-text-body-dark mb-2 uppercase tracking-tight">
+                            {t('passport.step3Title')}
+                        </h3>
+                        <p className="text-text-muted text-sm leading-relaxed mb-6 font-mono">
+                            {t('passport.step3Body')}
+                        </p>
                         <button className="w-full h-12 bg-primary-light dark:bg-primary text-white text-xs font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:shadow-hard-hover transition-all border-none cursor-pointer">
-                            View Receipt <ArrowRight className="w-4 h-4 ml-1" />
+                            {t('passport.step3Cta')} <ArrowRight className="w-4 h-4 ml-1" />
                         </button>
                     </div>
                 </div>
@@ -124,18 +149,30 @@ export function PassportExperience() {
             <div className="max-w-6xl w-full mx-auto grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-l border-grid-color dark:border-grid-color-dark mt-20">
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <CreditCard className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">No Data Exposure</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Prove solvency and income without sharing your coffee receipts or full history.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">
+                        {t('passport.featureNoExposureTitle')}
+                    </h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">
+                        {t('passport.featureNoExposureBody')}
+                    </p>
                 </div>
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <Building2 className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">Source Integrity</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Verified directly from the bank's TLS session. Zero chance of forgery.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">
+                        {t('passport.featureIntegrityTitle')}
+                    </h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">
+                        {t('passport.featureIntegrityBody')}
+                    </p>
                 </div>
                 <div className="p-10 bg-surface-light dark:bg-surface-dark border-r border-b border-grid-color dark:border-grid-color-dark">
                     <Lock className="text-primary-light dark:text-trust-blue w-6 h-6 mb-6" />
-                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">ZK-Powered</h4>
-                    <p className="text-text-muted text-sm leading-relaxed font-mono">Math-based guarantees that replace human-based reviews.</p>
+                    <h4 className="text-sm font-bold text-text-body-light dark:text-text-body-dark uppercase tracking-widest mb-4">
+                        {t('passport.featureZkTitle')}
+                    </h4>
+                    <p className="text-text-muted text-sm leading-relaxed font-mono">
+                        {t('passport.featureZkBody')}
+                    </p>
                 </div>
             </div>
         </section>

@@ -6,6 +6,7 @@ import { Router, type Request, type Response } from "express";
 import jwt from "jsonwebtoken";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { detectLocale, t } from "../i18n";
 
 const router = Router();
 const JWT_SECRET = "mock-bank-secret";
@@ -25,10 +26,11 @@ interface UserRow {
 router.post("/login", async (req: Request, res: Response) => {
   try {
     const { username, password } = req.body as { username?: string; password?: string };
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
     if (!username || !password) {
       return res.status(400).json({
         error: "INVALID_CREDENTIALS",
-        message: "Username and password required",
+        message: t(locale, "auth.usernamePasswordRequired"),
       });
     }
     const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
@@ -38,14 +40,14 @@ router.post("/login", async (req: Request, res: Response) => {
     if (!user) {
       return res.status(401).json({
         error: "INVALID_CREDENTIALS",
-        message: "Username or password incorrect",
+        message: t(locale, "auth.invalidCredentials"),
       });
     }
     const valid = await Bun.password.verify(password, user.passwordHash, "bcrypt");
     if (!valid) {
       return res.status(401).json({
         error: "INVALID_CREDENTIALS",
-        message: "Username or password incorrect",
+        message: t(locale, "auth.invalidCredentials"),
       });
     }
     const token = jwt.sign(
@@ -63,7 +65,7 @@ router.post("/login", async (req: Request, res: Response) => {
   } catch {
     return res.status(500).json({
       error: "INTERNAL_ERROR",
-      message: "Login failed",
+      message: t(detectLocale(req.headers["accept-language"] as string | undefined), "auth.loginFailed"),
     });
   }
 });
