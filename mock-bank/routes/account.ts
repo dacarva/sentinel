@@ -7,6 +7,7 @@ import { Router, type Request, type Response } from "express";
 import { expressjwt } from "express-jwt";
 import { readFile } from "fs/promises";
 import { join } from "path";
+import { detectLocale, t } from "../i18n";
 
 const router = Router();
 const JWT_SECRET = "mock-bank-secret";
@@ -42,12 +43,13 @@ router.use(
 router.get("/balance", async (req: Request, res: Response) => {
   try {
     const username = (req as Request & { auth?: { sub: string } }).auth?.sub;
-    if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: "No token" });
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: t(locale, "account.noToken") });
     const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
     const raw = await readFile(dataDir, "utf-8");
     const users = JSON.parse(raw) as UserRow[];
     const user = users.find((u) => u.username === username);
-    if (!user) return res.status(404).json({ error: "NOT_FOUND", message: "User not found" });
+    if (!user) return res.status(404).json({ error: "NOT_FOUND", message: t(locale, "account.userNotFound") });
     return res.status(200).json({
       account_id: user.accountId,
       balance: user.balance,
@@ -55,23 +57,30 @@ router.get("/balance", async (req: Request, res: Response) => {
       last_updated: new Date().toISOString(),
     });
   } catch (e) {
-    return res.status(500).json({ error: "INTERNAL_ERROR", message: "Failed to get balance" });
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: t(detectLocale(req.headers["accept-language"] as string | undefined), "account.failedBalance"),
+    });
   }
 });
 
 router.get("/transactions", async (req: Request, res: Response) => {
   try {
     const username = (req as Request & { auth?: { sub: string } }).auth?.sub;
-    if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: "No token" });
+    const locale = detectLocale(req.headers["accept-language"] as string | undefined);
+    if (!username) return res.status(401).json({ error: "UNAUTHORIZED", message: t(locale, "account.noToken") });
     const dataDir = join(import.meta.dir ?? "", "..", "data", "users.json");
     const raw = await readFile(dataDir, "utf-8");
     const users = JSON.parse(raw) as UserRow[];
     const user = users.find((u) => u.username === username);
-    if (!user) return res.status(404).json({ error: "NOT_FOUND", message: "User not found" });
+    if (!user) return res.status(404).json({ error: "NOT_FOUND", message: t(locale, "account.userNotFound") });
     const transactions = user.transactions ?? [];
     return res.status(200).json({ transactions });
   } catch (e) {
-    return res.status(500).json({ error: "INTERNAL_ERROR", message: "Failed to get transactions" });
+    return res.status(500).json({
+      error: "INTERNAL_ERROR",
+      message: t(detectLocale(req.headers["accept-language"] as string | undefined), "account.failedTransactions"),
+    });
   }
 });
 
