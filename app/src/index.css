@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand-base: #0a0a0c;
   --color-brand-surface: #141417;
@@ -7,15 +9,71 @@
   --color-brand-accent: #3b82f6;
   --color-brand-accent-hover: #60a5fa;
 
+  --color-primary: #312e81;
+  --color-primary-light: #6366F1;
+  --color-trust-blue: #6366F1;
+  --color-background-light: #F9FAFB;
+  --color-background-dark: #0A1929;
+  --color-surface-dark: #132F4C;
+  --color-surface-light: #FFFFFF;
+  --color-text-body-light: #0A1929;
+  --color-text-body-dark: #F3F4F6;
+  --color-text-muted: #94A3B8;
+  --color-grid-color: #E2E8F0;
+  --color-grid-color-dark: #1E293B;
+
   --font-inter: "Inter", sans-serif;
   --font-public-sans: "Public Sans", sans-serif;
+  --font-display: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
 
   --animate-fade-in: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-marquee: marquee 25s linear infinite;
+}
+
+@layer utilities {
+  .tracking-tighter-swiss {
+    letter-spacing: -0.02em;
+  }
+
+  .tracking-tight-swiss {
+    letter-spacing: -0.01em;
+  }
+
+  .shadow-hard {
+    box-shadow: 4px 4px 0px var(--color-trust-blue);
+  }
+
+  .shadow-hard-hover {
+    box-shadow: 6px 6px 0px var(--color-trust-blue);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@utility bg-grid-pattern-light {
+  background-image: linear-gradient(to right, var(--color-grid-color) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+@utility bg-grid-pattern-dark {
+  background-image: linear-gradient(to right, var(--color-grid-color-dark) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--color-grid-color-dark) 1px, transparent 1px);
+  background-size: 40px 40px;
 }
 
 @layer base {
   body {
-    @apply bg-brand-base text-white font-inter antialiased;
+    @apply bg-background-light text-text-body-light dark:bg-brand-base dark:text-white font-inter antialiased;
     margin: 0;
     padding: 0;
   }

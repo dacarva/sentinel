@@ -25,3 +25,5 @@ dist-ssr
 
 # Built TLSNotary plugin (generate with: bun run plugin:build)
 public/mock-bank-plugin.wasm
+
+stitch_assets/
