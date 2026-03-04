@@ -4,6 +4,7 @@
     "useCases": "Use Cases",
     "architecture": "Architecture",
     "verify": "Verify",
+    "launch": "Launch",
     "launchProtocol": "Launch Protocol"
   },
   "hero": {

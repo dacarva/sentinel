@@ -57,9 +57,10 @@ function App() {
             <div className="flex items-center gap-2 md:gap-4">
               <Link
                 to="/app"
-                className="hidden md:flex h-10 px-5 bg-primary-light dark:bg-brand-accent text-white text-[11px] font-bold uppercase tracking-widest items-center justify-center hover:brightness-110 transition-all shadow-lg no-underline"
+                className="flex h-8 px-3 md:h-10 md:px-5 bg-primary-light dark:bg-brand-accent text-white text-[10px] md:text-[11px] font-bold uppercase tracking-widest items-center justify-center hover:brightness-110 transition-all shadow-lg no-underline"
               >
-                {t('nav.launchProtocol')}
+                <span className="md:hidden">{t('nav.launch')}</span>
+                <span className="hidden md:inline">{t('nav.launchProtocol')}</span>
               </Link>
               <div className="flex items-center gap-2 md:gap-3">
                 <div className="hidden md:flex items-center gap-1 text-[10px] font-semibold uppercase tracking-widest">
