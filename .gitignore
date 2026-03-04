@@ -41,8 +41,9 @@ mock-bank/certs/
 backend/data/
 data/attestations/
 
-# Built TLSNotary plugin (generate with: bun run plugin:build)
+# Built TLSNotary plugins (generate with: bun run plugin:build)
 app/public/mock-bank-plugin.wasm
+app/public/ts-plugin-*.js
 
 # Noir circuit compiled artifacts — generated in CI/CD, not committed to repo.
 # Run: cd circuit && nargo compile && bb write_vk -b target/balance_threshold.json -o target/

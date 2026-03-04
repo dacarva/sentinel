@@ -1,0 +1,6 @@
+{
+  "buildCommand": "bun run app:build",
+  "installCommand": "bun install",
+  "outputDirectory": "app/dist",
+  "framework": null
+}

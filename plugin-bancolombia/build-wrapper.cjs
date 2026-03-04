@@ -2,7 +2,9 @@
 /**
  * Build wrapper for Bancolombia TLSN plugin.
  *
- * Loads .env from the plugin directory so VERIFIER_URL and PROXY_URL are injected at build time.
+ * Injects VERIFIER_URL and PROXY_URL at build time:
+ * - Local: loads plugin-bancolombia/.env (see .env.example).
+ * - Vercel: use Project Settings → Environment Variables; they are available as process.env.
  */
 const { execSync } = require('child_process');
 const path = require('path');

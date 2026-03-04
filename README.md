@@ -76,14 +76,15 @@ bun install
 ```
 
 ### Building the Project
-You must build the ZK circuit and plugins before running the full stack:
+Build the ZK circuit and the Bancolombia plugin before running the full stack:
 ```bash
-# Compile Noir circuit and generate verification key
+# Compile Noir circuit and generate verification key (optional for v2-only flows)
 bun run circuit:build
 
-# Build the Bancolombia plugin
-cd plugin-bancolombia && bun run build
+# Build the Bancolombia plugin and copy to app/public/
+bun run plugin:build
 ```
+`plugin:build` builds `plugin-bancolombia` and copies `ts-plugin-bancolombia.js` to `app/public/`. For local dev, set `VERIFIER_URL` and `PROXY_URL` in `plugin-bancolombia/.env` (see `plugin-bancolombia/.env.example`). For Vercel, set those variables in the project’s Environment Variables.
 
 ### Local Development
 1. **Start Backend**: `bun run sentinel:start` (Port 3000)
