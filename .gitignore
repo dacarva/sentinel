@@ -51,7 +51,7 @@ app/public/ts-plugin-*.js
 circuit/target/
 
 # Circuit artifact served to the browser (copied from circuit/target/ during build)
-app/public/circuit.json
+# app/public/circuit.json
 
 # Binaryen (downloaded by extism-js install for WASM compile; not project source)
 binaryen/
