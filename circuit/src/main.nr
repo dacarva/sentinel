@@ -1,4 +1,4 @@
-use dep::sha256::digest;
+use std::hash::sha256;
 
 /// Balance threshold proof circuit.
 ///
@@ -44,7 +44,7 @@ fn main(
         blinder[12], blinder[13], blinder[14], blinder[15],
     ];
 
-    let computed = digest(preimage);
+    let computed = sha256(preimage);
     assert(computed == commitment, "Commitment mismatch");
 }
 
@@ -71,7 +71,7 @@ fn test_balance_above_threshold() {
         blinder[8], blinder[9], blinder[10], blinder[11],
         blinder[12], blinder[13], blinder[14], blinder[15],
     ];
-    let commitment = digest(preimage);
+    let commitment = sha256(preimage);
 
     main(balance, blinder, commitment, threshold);
 }
@@ -98,7 +98,7 @@ fn test_balance_below_threshold() {
         blinder[8], blinder[9], blinder[10], blinder[11],
         blinder[12], blinder[13], blinder[14], blinder[15],
     ];
-    let commitment = digest(preimage);
+    let commitment = sha256(preimage);
 
     main(balance, blinder, commitment, threshold);
 }
