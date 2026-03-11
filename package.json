@@ -7,7 +7,7 @@
   "scripts": {
     "bank:start": "bun run --filter mock-bank start",
     "app:dev": "bun run --filter app dev",
-    "app:build": "bun run plugin:build && bun run --filter app build",
+    "app:build": "bun run plugin:build && bun run circuit:build && bun run --filter app build",
     "app:lint": "bun run --filter app lint",
     "app:preview": "bun run --filter app preview",
     "sentinel:start": "bun run --filter backend start",
