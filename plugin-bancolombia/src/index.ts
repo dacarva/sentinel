@@ -148,19 +148,19 @@ async function onClick(): Promise<void> {
           { type: 'RECV', part: 'START_LINE', action: 'REVEAL' } satisfies Handler,
           {
             type: 'RECV', part: 'BODY', action: 'REVEAL',
-            params: { type: 'json', path: 'data.accounts[0].balances.available' },
+            params: { type: 'json', path: 'data.accounts.0.balances.available' },
           } satisfies Handler,
           {
             type: 'RECV', part: 'BODY', action: 'REVEAL',
-            params: { type: 'json', path: 'data.accounts[0].currency' },
+            params: { type: 'json', path: 'data.accounts.0.currency' },
           } satisfies Handler,
           {
             type: 'RECV', part: 'BODY', action: 'REVEAL',
-            params: { type: 'json', path: 'data.accounts[0].number' },
+            params: { type: 'json', path: 'data.accounts.0.number' },
           } satisfies Handler,
           {
             type: 'RECV', part: 'BODY', action: 'REVEAL',
-            params: { type: 'json', path: 'data.accounts[0].name' },
+            params: { type: 'json', path: 'data.accounts.0.name' },
           } satisfies Handler,
         ],
       }
