@@ -198,7 +198,7 @@ Bank TLS Session (sentinel-d75o.onrender.com, CA-signed cert)
 ## Monorepo Structure
 
 ```
-zk-credit/
+sentinel/
 ├── circuits/                  # Noir ZK circuits
 │   └── balance_check/
 │       ├── Nargo.toml

@@ -42,12 +42,19 @@ export function getDataDir(): string {
 /** Path to TLSNotary Rust verifier binary (optional). */
 export const VERIFIER_BINARY = envString("VERIFIER_BINARY", "");
 
-const DEFAULT_NOTARY_PRIV_KEY =
-  "a1b2c3d4e5f607182936455647384950607172839405152637485960718293041";
+const CHANGE_ME_NOTARY_PRIV_KEY =
+  "CHANGE_ME_SET_A_REAL_SECP256K1_PRIVATE_KEY_IN_NOTARY_PRIV_KEY_ENV_VAR";
 
 /** Notary private key hex for signing attestations (secp256k1). */
 export function getNotaryPrivKey(): string {
-  return envString("NOTARY_PRIV_KEY", DEFAULT_NOTARY_PRIV_KEY);
+  const key = envString("NOTARY_PRIV_KEY", CHANGE_ME_NOTARY_PRIV_KEY);
+  if (key === CHANGE_ME_NOTARY_PRIV_KEY || key.startsWith("CHANGE_ME")) {
+    console.warn(
+      "\n⚠️  WARNING: NOTARY_PRIV_KEY is not set. Using a placeholder — attestations will fail.\n" +
+      "   Generate a real secp256k1 private key and set NOTARY_PRIV_KEY in your environment.\n"
+    );
+  }
+  return key;
 }
 
 /** Notary public key (read at call time so tests can override env).
@@ -65,7 +72,14 @@ export const NOTARY_PUB_KEY = getNotaryPubKey();
 
 /** Shared secret for validating TLSN verifier webhook requests. */
 export function getTlsnWebhookSecret(): string {
-  return envString("TLSN_WEBHOOK_SECRET", "dev-local-secret");
+  const secret = envString("TLSN_WEBHOOK_SECRET", "CHANGE_ME_SET_WEBHOOK_SECRET");
+  if (secret === "CHANGE_ME_SET_WEBHOOK_SECRET" || secret.startsWith("CHANGE_ME")) {
+    console.warn(
+      "\n⚠️  WARNING: TLSN_WEBHOOK_SECRET is not set. Using a placeholder — webhook auth will fail in production.\n" +
+      "   Set TLSN_WEBHOOK_SECRET to a strong random string in your environment.\n"
+    );
+  }
+  return secret;
 }
 
 /** Whether to require webhook verification for JS presentations (can be disabled for tests). */

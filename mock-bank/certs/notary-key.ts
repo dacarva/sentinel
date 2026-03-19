@@ -1,11 +1,14 @@
 /**
- * Notary key pair for TLSNotary MPC simulation (IMPLEMENTATION.md §3).
- * Exports NOTARY_PUB_KEY and NOTARY_PRIV_KEY for use by attestation/verifier later.
+ * Notary key pair for TLSNotary MPC simulation.
+ *
+ * DEV-ONLY: These are placeholder values for local development.
+ * In production, set NOTARY_PRIV_KEY and NOTARY_PUB_KEY environment variables
+ * with a real secp256k1 key pair. Generate one with:
+ *   node -e "const EC=require('elliptic').ec; const k=new EC('secp256k1').genKeyPair(); console.log('priv:', k.getPrivate('hex')); console.log('pub:', k.getPublic(true,'hex'));"
  */
-// For mock-bank-only build we use a placeholder; verifier will use same keys when built.
 const NOTARY_PUB_KEY =
-  "02a1b2c3d4e5f60718293645564738495060717283940515263748596071829304";
+  "CHANGE_ME_SET_REAL_SECP256K1_PUBLIC_KEY";
 const NOTARY_PRIV_KEY =
-  "a1b2c3d4e5f607182936455647384950607172839405152637485960718293041";
+  "CHANGE_ME_SET_REAL_SECP256K1_PRIVATE_KEY";
 
 export { NOTARY_PUB_KEY, NOTARY_PRIV_KEY };

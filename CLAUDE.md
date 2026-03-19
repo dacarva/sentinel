@@ -19,6 +19,7 @@ This is a Bun workspaces monorepo with the following packages:
 |-----------|---------|-----------|
 | `backend/` | REST API for attestation creation & verification | `src/server.ts`, `src/attestation/`, `src/verifier/` |
 | `app/` | React frontend for wallet connection & proof flow | `src/` (React + Vite) |
+| `circuit/` | Noir ZK circuit for balance threshold proofs | `src/main.nr`, `Nargo.toml` |
 | `mock-bank/` | HTTPS server simulating bank (login + accounts) | `server.ts` |
 | `plugin/` | TLSNotary plugin for selective disclosure (base) | `src/` |
 | `plugin-bancolombia/` | Bank-specific plugin (Bancolombia) | `src/` |
@@ -71,13 +72,16 @@ Web App (localhost:5173)
     ↓
 TLSNotary Browser Extension
     ↓
-MPC-TLS Session with Mock Bank (https://localhost:3443)
+MPC-TLS Session with Bank (https://localhost:3443 in dev)
+    ↓
+  [v2 path] Selective field REVEAL committed to TLS transcript
+  [v3 path] Noir circuit runs in browser → ZK proof (balance > threshold)
     ↓
 Local TLSNotary Verifier (localhost:7047)
     ↓
 HTTP Webhook POST → Backend API (localhost:3000)
     ↓
-Attestation Storage + Verification
+Attestation Storage + Verification (balance check / ZK proof verify via bb)
     ↓
 Signed Attestation returned to App
 ```
@@ -121,7 +125,7 @@ Signed Attestation returned to App
 - `DATA_DIR` (data) — Filesystem storage directory
 - `NOTARY_PRIV_KEY` — secp256k1 private key (keep secret!)
 - `NOTARY_PUB_KEY` — Derived from private key if unset
-- `TLSN_WEBHOOK_SECRET` (dev-local-secret) — Shared secret for webhook auth
+- `TLSN_WEBHOOK_SECRET` — Shared secret for webhook auth (must be set; server warns if placeholder detected)
 - `REQUIRE_WEBHOOK` (true) — Enforce webhook for JS presentations
 - `BALANCE_THRESHOLD` (1000) — Minimum balance for verification
 - `MIN_TX_PER_MONTH` (3) — Min transactions per month
@@ -134,6 +138,9 @@ Signed Attestation returned to App
 **App**:
 - `VITE_SENTINEL_API` (http://localhost:3000) — Backend URL
 - `VITE_TLSN_PLUGIN_URL` (/ts-plugin-sample.js) — Plugin JS URL
+
+**Circuit / ZK**:
+- `BB_BIN` (bb) — Path to the Barretenberg CLI binary used for ZK proof verification
 
 ## Testing
 
@@ -173,7 +180,7 @@ X-TLSN-Timestamp: 1708881960   (Unix seconds, ±5 min window)
 
 **Legacy (Development)**:
 ```
-X-TLSN-Secret: dev-local-secret
+X-TLSN-Secret: <value of TLSN_WEBHOOK_SECRET>
 ```
 
 ### Signature Verification
@@ -220,9 +227,13 @@ bun run --filter backend verify -- att-12345
 ## Documentation References
 
 - **[README.md](README.md)** — Project overview, quick start, architecture diagrams
-- **[ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Webhook architecture & setup
-- **[MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Test cases & troubleshooting
-- **[PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — PostgreSQL, backups, compliance
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — Contributor guide, prerequisites, workflow
+- **[SECURITY.md](SECURITY.md)** — Security policy, vulnerability disclosure
+- **[docs/architecture.md](docs/architecture.md)** — Detailed system architecture
+- **[docs/ZK_CIRCUITS.md](docs/ZK_CIRCUITS.md)** — Noir ZK circuit documentation
+- **[docs/ZKTLS_WEBHOOK_SETUP.md](docs/ZKTLS_WEBHOOK_SETUP.md)** — Webhook architecture & setup
+- **[docs/MANUAL_TESTING.md](docs/MANUAL_TESTING.md)** — Test cases & troubleshooting
+- **[docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md)** — PostgreSQL, backups, compliance
 
 ## Plugin Development
 

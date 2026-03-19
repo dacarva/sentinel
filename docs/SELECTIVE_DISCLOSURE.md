@@ -1,3 +1,5 @@
+> **Note:** This documents the v2 selective disclosure implementation. For the current v3 zero-knowledge proof approach, see [ZK_CIRCUITS.md](ZK_CIRCUITS.md).
+
 # Selective Disclosure
 
 ## Status: Completed in v2
