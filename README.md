@@ -6,6 +6,8 @@
 
 Sentinel is a cryptographic attestation system that enables users to prove their financial data (bank balance, transaction history) to third parties without exposing credentials. It leverages **MPC-TLS** (via [TLSNotary](https://tlsnotary.org)) and **Zero-Knowledge Proofs** (via [Noir](https://noir-lang.org)) to create verifiable, privacy-preserving attestations.
 
+**Note** (March 2026): Sentinel was my initial architecture for Zero-Knowledge financial attestations using zkTLS. While powerful, zkTLS introduces massive latency overhead for real-time AI agents. I have since evolved this architecture into [Zemtik](https://github.com/dacarva/zemtik-core), replacing zkTLS with a sub-20-second local state-extraction proxy (Rust + UltraHonk) designed specifically for Enterprise AI compliance.
+
 ---
 
 ## Key Features
